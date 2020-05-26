@@ -8,7 +8,7 @@ delaneyBinary <- read_csv("data/delaney-binary.csv")
 train <- delaneyBinary %>%
   select(Molecular.Weight, 
          Number.of.Rotatable.Bonds, 
-         # Polar.Surface.Area,  # Uncomment to fit using Polar.Surface.Area
+         Polar.Surface.Area,  # Uncomment to fit using Polar.Surface.Area
          solubility.above.or.below.median) %>%
   mutate_at(.vars = "solubility.above.or.below.median", .funs = factor)
 
