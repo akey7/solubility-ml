@@ -19,6 +19,8 @@ delaneyTask <- makeClassifTask(data = train,
 # Create the learner
 learner <- makeLearner("classif.logreg", predict.type = "prob")
 
+mod <- train(learner, delaneyTask)
+
 # Create k-fold cross validation
 kFold <- makeResampleDesc(method = "RepCV", folds = 10, reps = 50, stratify = TRUE)
 
