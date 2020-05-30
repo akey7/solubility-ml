@@ -26,8 +26,13 @@ kFold <- makeResampleDesc(method = "RepCV", folds = 10, reps = 50, stratify = TR
 result <- resample(learner = learner, 
                    task = delaneyTask, 
                    resampling = kFold, 
-                   measures = list(acc, fpr, fnr))
+                   measures = list(acc, fpr, fnr),
+                   models = TRUE)
 
-# And print a confusion matrix across all iterations
+# Print a confusion matrix across all iterations
 confusion <- calculateConfusionMatrix(result$pred, relative = TRUE, set = "test")
 print(confusion)
+
+# Now make an ROC plot
+df = generateThreshVsPerfData(result$pred, measures = list(fpr, tpr, mmce))
+print(plotROCCurves(df))
