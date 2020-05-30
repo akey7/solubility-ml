@@ -87,4 +87,4 @@ Using the second row of predictors above, I created an ROC curve for the first l
 
 The three curves below are the true positive rate, false positive rate, and mean misclassification error as a function of threshold:
 
-![performance curves](img/logisitc_perf.png)
+![performance curves](img/logistic_perf.png)
