@@ -25,7 +25,7 @@ kFold <- makeResampleDesc(method = "RepCV", folds = 10, reps = 50, stratify = TR
 # Now run the cross validation
 result <- resample(learner = learner, 
                    task = delaneyTask, 
-                   resampling = kFold, 
+                   resampling = kFold,
                    measures = list(acc, fpr, fnr),
                    models = TRUE)
 
@@ -33,7 +33,9 @@ result <- resample(learner = learner,
 confusion <- calculateConfusionMatrix(result$pred, relative = TRUE, set = "test")
 print(confusion)
 
-# Now make an ROC plot
-df = generateThreshVsPerfData(result$pred, measures = list(fpr, tpr, mmce))
-# print(plotROCCurves(df))
-print(plotThreshVsPerf(df))
+# Now make an ROC plot of the first model from the resampling
+firstModel <- result$models[[1]]
+pred <- predict(firstModel, delaneyTask)
+df = generateThreshVsPerfData(pred, measures = list(fpr, tpr, mmce))
+print(plotROCCurves(df))
+# print(plotThreshVsPerf(df))
