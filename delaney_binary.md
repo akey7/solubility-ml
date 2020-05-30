@@ -32,6 +32,8 @@ From the 2004 study, here is an explanation of these variables:
 | Variable name | Units | Description |
 |---------------|-------|-------------|
 | Molecular Weight | g / mol | the molecular weight of the compound
+| Number of Rotatable Bonds | unitless | The number of rotatable bonds in the compund, as calculated by the patterns in the SMILES string `[!X1]-,)- [$([C.;X4])]-&!@[$([C.;X4])]-[!X1], [!X1]:c-&!@[$([C.;X4])]-[!X1], [!X1]-,)C-&!@[$([N.;X4])]-[!X1], [!X1]-[$([C.;X4])]-&!@[$([N.;X3])]- [!X1], [!X1]-[$([C.;X4])]-&!@[$([O.;X2])]-[!X1]`
+| Polar Surface Area | Å<sup>2</sup> | The surface area of the polar atoms of the compound. [See Wikipedia for details](https://en.wikipedia.org/wiki/Polar_surface_area)  
 
 ## Algorithms
 
