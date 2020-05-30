@@ -35,4 +35,5 @@ print(confusion)
 
 # Now make an ROC plot
 df = generateThreshVsPerfData(result$pred, measures = list(fpr, tpr, mmce))
-print(plotROCCurves(df))
+# print(plotROCCurves(df))
+print(plotThreshVsPerf(df))
