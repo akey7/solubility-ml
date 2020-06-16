@@ -39,3 +39,7 @@ pred <- predict(firstModel, delaneyTask)
 df = generateThreshVsPerfData(pred, measures = list(fpr, tpr, mmce))
 print(plotROCCurves(df))
 # print(plotThreshVsPerf(df))
+
+# Now calculate the AUROC
+auroc = performance(pred, auc)
+print(paste("AUROC:", auroc))
