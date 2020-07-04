@@ -46,7 +46,6 @@ From the 2004 study, here is an explanation of these variables:
 | Number of Rotatable Bonds | unitless | The number of rotatable bonds in the compund, as calculated by the patterns in the SMILES string `[!X1]-,)- [$([C.;X4])]-&!@[$([C.;X4])]-[!X1], [!X1]:c-&!@[$([C.;X4])]-[!X1], [!X1]-,)C-&!@[$([N.;X4])]-[!X1], [!X1]-[$([C.;X4])]-&!@[$([N.;X3])]- [!X1], [!X1]-[$([C.;X4])]-&!@[$([O.;X2])]-[!X1]`
 | Polar Surface Area | Å<sup>2</sup> | The surface area of the polar atoms of the compound. [See Wikipedia for details](https://en.wikipedia.org/wiki/Polar_surface_area) 
 
-## Solubility Data
 ``` {r message = FALSE, include = FALSE}
 binarySolubility <- read_csv("data/delaney-binary.csv")
 train <- binarySolubility %>%
@@ -91,7 +90,7 @@ p3 <- ggplot(train, aes(x = Polar.Surface.Area)) +
 grid.arrange(p1, p2, p3, nrow = 1)
 ```
 
-## Exploratory analysis
+## Exploratory Data Visualization
 
 Since my predictor variables are number of rotatable bonds, polar surface area, and molecular weight, I plotted these variables and labels on scatter plots to see the shape of the data. 
 
