@@ -17,8 +17,6 @@ library(gridExtra)
 ```
 
 ## Solubility Data
-
-Here, I load the solubility data and select the predictors (`Molecular.Weight`, `Number.of.Rotatable.Bonds`, `Polar.Surface.Area`) and the label (`solubility.above.or.below.median`). Change the label into a factor with two levels, 1 and 0, meaning above or below the median solubility respectively:
 ``` {r message = FALSE, include = FALSE}
 binarySolubility <- read_csv("data/delaney-binary.csv")
 train <- binarySolubility %>%
@@ -35,9 +33,18 @@ train <- binarySolubility %>%
 summary(train)
 ```
 
-### Distributions
+### Classes
 
-``` {r, fig.height = 2, fig.width = 10, echo = FALSE}
+There are two classes stored in the variable `solubility.above.or.below.median`. 1 means the solubility is above the median, 0 means the solubility is below the median. The underlying solubility is measured in units of log(g/mol). Class counts are as follows:
+
+``` {r echo = FALSE}
+train %>%
+  count(solubility.above.or.below.median)
+```
+
+### Distributions of predictor variables
+
+``` {r, fig.height = 2, fig.width = 7, fig.align = "center", echo = FALSE}
 p1 <- ggplot(train, aes(x = Molecular.Weight)) +
   geom_histogram(bins = 10) +
   ylim(0, 600) +
@@ -47,7 +54,7 @@ p1 <- ggplot(train, aes(x = Molecular.Weight)) +
 p2 <- ggplot(train, aes(x = Number.of.Rotatable.Bonds)) +
   geom_histogram(bins = 10) +
   ylim(0, 600) +
-  ggtitle("Number of Rotatable Bonds") +
+  ggtitle("Rotatable Bonds") +
   xlab("bonds")
 
 p3 <- ggplot(train, aes(x = Polar.Surface.Area)) +
