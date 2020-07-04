@@ -16,6 +16,36 @@ library(tidyr)
 library(gridExtra)
 ```
 
+# Introduction
+
+In 2004, John Delaney published a paper which studied a method to predict the aqueous solubility of various compounds [(Delaney, 2004)](https://pubs.acs.org/doi/10.1021/ci034243x) . This paper is widely cited in the machine learning and deep learning literature for chemistry applications. It is like a Titanic or MNIST dataset for the chemistry ML community. The data are labeled with the known solubility in log solubility in mol/L.
+
+Starting the with the ESOL method described by Delaney in 2004, there have been multiple discussions of predicting solubility from these data. Here are two of them:
+
+1.	[http://practicalcheminformatics.blogspot.com/2018/09/predicting-aqueous-solubility-its.html](http://practicalcheminformatics.blogspot.com/2018/09/predicting-aqueous-solubility-its.html)
+1.	[https://github.com/deepchem/deepchem/blob/master/examples/tutorials/03_Modeling_Solubility.ipynb](https://github.com/deepchem/deepchem/blob/master/examples/tutorials/03_Modeling_Solubility.ipynb)
+
+I used the dataset released in the [deepchem.io project](https://github.com/deepchem/deepchem/blob/master/datasets/delaney-processed.csv)
+
+For this study, my interests are exploratory data analysis and comparing the performance of various models with these data. To simplify the first iteration of this process, I changed this from a regression of a continuous value of solubility into a binary classification. The two classes are:
+
+1. Those compounds with solubility higher than the median
+1. Those compounds with a solubility lower than the median
+
+The solubility data underlying these two classes are measured in log(g/mol).
+
+## Data Preparation and Feature Extraction
+
+The goal of the original 2004 study was to predict the solubility of compounds from SMILES strings. SMILES strings represent the strucuture of a molecule. In the study, these strings were used to calculate several intermediate numeric variables that could then be used to predict solubility. The most significant predictors noted in the abstract are the molecular weight and number of rotatable bonds. I was also interested in the contribution of polar surface area as well.
+
+From the 2004 study, here is an explanation of these variables:
+
+| Variable name | Units | Description |
+|---------------|-------|-------------|
+| Molecular Weight | g / mol | the molecular weight of the compound
+| Number of Rotatable Bonds | unitless | The number of rotatable bonds in the compund, as calculated by the patterns in the SMILES string `[!X1]-,)- [$([C.;X4])]-&!@[$([C.;X4])]-[!X1], [!X1]:c-&!@[$([C.;X4])]-[!X1], [!X1]-,)C-&!@[$([N.;X4])]-[!X1], [!X1]-[$([C.;X4])]-&!@[$([N.;X3])]- [!X1], [!X1]-[$([C.;X4])]-&!@[$([O.;X2])]-[!X1]`
+| Polar Surface Area | Å<sup>2</sup> | The surface area of the polar atoms of the compound. [See Wikipedia for details](https://en.wikipedia.org/wiki/Polar_surface_area) 
+
 ## Solubility Data
 ``` {r message = FALSE, include = FALSE}
 binarySolubility <- read_csv("data/delaney-binary.csv")
@@ -27,15 +57,10 @@ train <- binarySolubility %>%
   mutate_at(.vars = "solubility.above.or.below.median", .funs = factor)
 ```
 
-### Summary
-
-``` {r echo = FALSE}
-summary(train)
-```
 
 ### Classes
 
-There are two classes stored in the variable `solubility.above.or.below.median`. 1 means the solubility is above the median, 0 means the solubility is below the median. The underlying solubility is measured in units of log(g/mol). Class counts are as follows:
+Two classes are stored in the variable `solubility.above.or.below.median`. 1 signifies solubility above the median and 0 signifies solubikity below the median. The underlying solubility is measured in units of log(g/mol). Class counts are as follows:
 
 ``` {r echo = FALSE}
 train %>%
@@ -64,4 +89,22 @@ p3 <- ggplot(train, aes(x = Polar.Surface.Area)) +
   xlab("sq. angstroms")
 
 grid.arrange(p1, p2, p3, nrow = 1)
+```
+
+## Exploratory analysis
+
+Since my predictor variables are number of rotatable bonds, polar surface area, and molecular weight, I plotted these variables and labels on scatter plots to see the shape of the data. 
+
+``` {r echo = FALSE, fig.width = 10, fig.height = 5}
+ggplot(train, aes(x = Molecular.Weight, 
+                  y = Number.of.Rotatable.Bonds, 
+                  shape = solubility.above.or.below.median,
+                  color = solubility.above.or.below.median,
+                  size = Polar.Surface.Area)) +
+  geom_point(alpha = 0.5) +
+  ggtitle("Rotatable Bonds vs Molecular Weight", 
+          subtitle = "All solubilities") +
+  xlab("molecular weight (g/mol)") +
+  ylab("rotatable bonds") +
+  theme(legend.position = "right")
 ```
