@@ -11,11 +11,14 @@ library(dplyr)
 library(readr)
 library(skimr)
 library(printr)
+library(ggplot2)
+library(tidyr)
+library(gridExtra)
 ```
 
 ## Solubility Data
 
-Here, I load the solubility data and select the predictors (`Molecular.Weight`, `Number.of.Rotatable.Bonds`, `Polar.Surface.Area`), select the label (`solubility.above.or.below.median`), and change the label into a factor:
+Here, I load the solubility data and select the predictors (`Molecular.Weight`, `Number.of.Rotatable.Bonds`, `Polar.Surface.Area`) and the label (`solubility.above.or.below.median`). Change the label into a factor with two levels, 1 and 0, meaning above or below the median solubility respectively:
 ``` {r message = FALSE, include = FALSE}
 binarySolubility <- read_csv("data/delaney-binary.csv")
 train <- binarySolubility %>%
@@ -26,14 +29,32 @@ train <- binarySolubility %>%
   mutate_at(.vars = "solubility.above.or.below.median", .funs = factor)
 ```
 
-The first 5 rows are:
+### Summary
 
 ``` {r echo = FALSE}
-head(train)
+summary(train)
 ```
 
-The [`skimr`](https://www.rdocumentation.org/packages/skimr/versions/2.1.1) summary of the data is:
+### Distributions
 
-``` {r echo = FALSE}
-skim(train)
+``` {r, fig.height = 2, fig.width = 10, echo = FALSE}
+p1 <- ggplot(train, aes(x = Molecular.Weight)) +
+  geom_histogram(bins = 10) +
+  ylim(0, 600) +
+  ggtitle("Molecular Weight") +
+  xlab("g/mol")
+
+p2 <- ggplot(train, aes(x = Number.of.Rotatable.Bonds)) +
+  geom_histogram(bins = 10) +
+  ylim(0, 600) +
+  ggtitle("Number of Rotatable Bonds") +
+  xlab("bonds")
+
+p3 <- ggplot(train, aes(x = Polar.Surface.Area)) +
+  geom_histogram(bins = 10) +
+  ylim(0, 600) +
+  ggtitle("Polar Surface Area") +
+  xlab("sq. angstroms")
+
+grid.arrange(p1, p2, p3, nrow = 1)
 ```
