@@ -40,3 +40,7 @@ vignettes/*.pdf
 
 # macOS junk
 .DS_Store
+
+# Intermediate HTML files from knitr
+*.html
+
