@@ -45,7 +45,9 @@ From the 2004 study, here is an explanation of these variables:
 | Number of Rotatable Bonds | unitless | The number of rotatable bonds in the compund, as calculated by the patterns in the SMILES string `[!X1]-,)- [$([C.;X4])]-&!@[$([C.;X4])]-[!X1], [!X1]:c-&!@[$([C.;X4])]-[!X1], [!X1]-,)C-&!@[$([N.;X4])]-[!X1], [!X1]-[$([C.;X4])]-&!@[$([N.;X3])]- [!X1], [!X1]-[$([C.;X4])]-&!@[$([O.;X2])]-[!X1]`
 | Polar Surface Area | Å<sup>2</sup> | The surface area of the polar atoms of the compound. [See Wikipedia for details](https://en.wikipedia.org/wiki/Polar_surface_area) 
 
-``` {r message = FALSE, include = FALSE}
+The code ni the block below is how I preprocessed the data and did the train test split. The train test split uses simple random sampling since there are equal numbers of each of two classes.
+
+``` {r message = FALSE}
 solubility <- as_tibble(read.csv("data/delaney-original.csv"))
 
 median_solubility = median(solubility$measured.log.solubility.in.mols.per.litre)
@@ -61,13 +63,10 @@ solubilityBinary <- solubility %>%
          solubility.above.or.below.median) %>%
   mutate_at(.vars = "solubility.above.or.below.median", .funs = factor)
 
-## 75% of the sample size
+# 75% of the sample size
 smp_size <- floor(0.75 * nrow(solubilityBinary))
-
-## set the seed to make your partition reproducible
 set.seed(123)
 train_ind <- sample(seq_len(nrow(solubilityBinary)), size = smp_size)
-
 train <- solubilityBinary[train_ind, ]
 test <- solubilityBinary[-train_ind, ]
 ```
@@ -85,19 +84,19 @@ train %>%
 ### Distributions of predictor variables
 
 ``` {r, fig.height = 2, fig.width = 7, fig.align = "center", echo = FALSE, fig.cap = "Figure 1: Histograms of predictor variables"}
-p1 <- ggplot(train, aes(x = Molecular.Weight)) +
+p1 <- ggplot(solubilityBinary, aes(x = Molecular.Weight)) +
   geom_histogram(bins = 10) +
   ylim(0, 600) +
   ggtitle("Molecular Weight") +
   xlab("g/mol")
 
-p2 <- ggplot(train, aes(x = Number.of.Rotatable.Bonds)) +
+p2 <- ggplot(solubilityBinary, aes(x = Number.of.Rotatable.Bonds)) +
   geom_histogram(bins = 10) +
   ylim(0, 600) +
   ggtitle("Rotatable Bonds") +
   xlab("bonds")
 
-p3 <- ggplot(train, aes(x = Polar.Surface.Area)) +
+p3 <- ggplot(solubilityBinary, aes(x = Polar.Surface.Area)) +
   geom_histogram(bins = 10) +
   ylim(0, 600) +
   ggtitle("Polar Surface Area") +
@@ -111,7 +110,7 @@ grid.arrange(p1, p2, p3, nrow = 1)
 Since my predictor variables are number of rotatable bonds, polar surface area, and molecular weight, I plotted these variables and labels on scatter plots to see the shape of the data. 
 
 ``` {r echo = FALSE, fig.width = 10, fig.height = 5, "Figure 2: Exploratory analysis of solubility"}
-ggplot(train, aes(x = Molecular.Weight, 
+ggplot(solubilityBinary, aes(x = Molecular.Weight, 
                   y = Number.of.Rotatable.Bonds, 
                   shape = solubility.above.or.below.median,
                   color = solubility.above.or.below.median,
