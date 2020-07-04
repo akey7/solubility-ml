@@ -46,13 +46,30 @@ From the 2004 study, here is an explanation of these variables:
 | Polar Surface Area | Å<sup>2</sup> | The surface area of the polar atoms of the compound. [See Wikipedia for details](https://en.wikipedia.org/wiki/Polar_surface_area) 
 
 ``` {r message = FALSE, include = FALSE}
-binarySolubility <- read_csv("data/delaney-binary.csv")
-train <- binarySolubility %>%
+solubility <- as_tibble(read.csv("data/delaney-original.csv"))
+
+median_solubility = median(solubility$measured.log.solubility.in.mols.per.litre)
+
+solubilityBinary <- solubility %>%
+  select(-ESOL.predicted.log.solubility.in.mols.per.litre) %>%
+  select(-smiles) %>%
+  mutate(solubility.above.or.below.median = 
+           ifelse(measured.log.solubility.in.mols.per.litre <= median_solubility, 0, 1)) %>%
   select(Molecular.Weight, 
          Number.of.Rotatable.Bonds, 
          Polar.Surface.Area,
          solubility.above.or.below.median) %>%
   mutate_at(.vars = "solubility.above.or.below.median", .funs = factor)
+
+## 75% of the sample size
+smp_size <- floor(0.75 * nrow(solubilityBinary))
+
+## set the seed to make your partition reproducible
+set.seed(123)
+train_ind <- sample(seq_len(nrow(solubilityBinary)), size = smp_size)
+
+train <- solubilityBinary[train_ind, ]
+test <- solubilityBinary[-train_ind, ]
 ```
 
 
@@ -135,8 +152,9 @@ knitr::kable(result$aggr, col.names = FALSE)
 Finally, I pulled out the first model of the 200 created and plotted performance metrics as a function of logistic regression threshold:
 
 ``` {r, fig.width = 6, fig.height = 3, fig.align = "center", fig.cap = "Figure 3: Performance curves for first model"}
+test_task <- makeClassifTask(data = test, target = "solubility.above.or.below.median")
 firstModel <- result$models[[1]]
-pred <- predict(firstModel, delaneyTask)
+pred <- predict(firstModel, test_task)
 df <- generateThreshVsPerfData(pred, measures = list(fpr, tpr, mmce))
 print(plotThreshVsPerf(df))
 ```
