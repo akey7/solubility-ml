@@ -1,0 +1,39 @@
+---
+title: "solubility_binary"
+author: "Alicia Key"
+date: "7/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(readr)
+library(skimr)
+library(printr)
+```
+
+## Solubility Data
+
+Here, I load the solubility data and select the predictors (`Molecular.Weight`, `Number.of.Rotatable.Bonds`, `Polar.Surface.Area`), select the label (`solubility.above.or.below.median`), and change the label into a factor:
+``` {r message = FALSE, include = FALSE}
+binarySolubility <- read_csv("data/delaney-binary.csv")
+train <- binarySolubility %>%
+  select(Molecular.Weight, 
+         Number.of.Rotatable.Bonds, 
+         Polar.Surface.Area,
+         solubility.above.or.below.median) %>%
+  mutate_at(.vars = "solubility.above.or.below.median", .funs = factor)
+```
+
+The first 5 rows are:
+
+``` {r echo = FALSE}
+head(train)
+```
+
+The [`skimr`](https://www.rdocumentation.org/packages/skimr/versions/2.1.1) summary of the data is:
+
+``` {r echo = FALSE}
+skim(train)
+```
