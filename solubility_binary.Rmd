@@ -14,9 +14,8 @@ library(printr)
 library(ggplot2)
 library(tidyr)
 library(gridExtra)
+library(mlr)
 ```
-
-# Introduction
 
 In 2004, John Delaney published a paper which studied a method to predict the aqueous solubility of various compounds [(Delaney, 2004)](https://pubs.acs.org/doi/10.1021/ci034243x) . This paper is widely cited in the machine learning and deep learning literature for chemistry applications. It is like a Titanic or MNIST dataset for the chemistry ML community. The data are labeled with the known solubility in log solubility in mol/L.
 
@@ -68,7 +67,7 @@ train %>%
 
 ### Distributions of predictor variables
 
-``` {r, fig.height = 2, fig.width = 7, fig.align = "center", echo = FALSE}
+``` {r, fig.height = 2, fig.width = 7, fig.align = "center", echo = FALSE, fig.cap = "Figure 1: Histograms of predictor variables"}
 p1 <- ggplot(train, aes(x = Molecular.Weight)) +
   geom_histogram(bins = 10) +
   ylim(0, 600) +
@@ -94,7 +93,7 @@ grid.arrange(p1, p2, p3, nrow = 1)
 
 Since my predictor variables are number of rotatable bonds, polar surface area, and molecular weight, I plotted these variables and labels on scatter plots to see the shape of the data. 
 
-``` {r echo = FALSE, fig.width = 10, fig.height = 5}
+``` {r echo = FALSE, fig.width = 10, fig.height = 5, "Figure 2: Exploratory analysis of solubility"}
 ggplot(train, aes(x = Molecular.Weight, 
                   y = Number.of.Rotatable.Bonds, 
                   shape = solubility.above.or.below.median,
@@ -106,4 +105,52 @@ ggplot(train, aes(x = Molecular.Weight,
   xlab("molecular weight (g/mol)") +
   ylab("rotatable bonds") +
   theme(legend.position = "right")
+```
+
+## Logistic Regression
+
+I used the `mlr` package for logistic regression with repeated k-fold cross validation with 20 repetitions of 10 folds each. The performance metrics of accuracy, false positive rate, and false negative rate are in the table below the code block.
+
+``` {r message = FALSE, warning = FALSE}
+# Create the task
+delaneyTask <- makeClassifTask(data = train, 
+                               target = "solubility.above.or.below.median")
+
+# Create the learner
+learner <- makeLearner("classif.logreg", predict.type = "prob")
+
+# Create k-fold cross validation
+kFold <- makeResampleDesc(method = "RepCV", folds = 10, reps = 20, stratify = TRUE)
+
+# Now run the cross validation
+result <- resample(learner = learner, 
+                   task = delaneyTask, 
+                   resampling = kFold,
+                   measures = list(acc, fpr, fnr),
+                   models = TRUE)
+
+knitr::kable(result$aggr, col.names = FALSE)
+```
+
+Finally, I pulled out the first model of the 200 created and plotted performance metrics as a function of logistic regression threshold:
+
+``` {r, fig.width = 6, fig.height = 3, fig.align = "center", fig.cap = "Figure 3: Performance curves for first model"}
+firstModel <- result$models[[1]]
+pred <- predict(firstModel, delaneyTask)
+df <- generateThreshVsPerfData(pred, measures = list(fpr, tpr, mmce))
+print(plotThreshVsPerf(df))
+```
+
+Finally, I made the ROC curve plot:
+
+``` {r, fig.width = 3, fig.height = 3, fig.align = "center", fig.cap = "Figure 4: ROC for first model"}
+plotROCCurves(df)
+```
+
+### Logistic regression AUROC
+
+The logistic regression AUROC for the first model in the run is:
+
+``` {r}
+performance(pred, auc)
 ```
