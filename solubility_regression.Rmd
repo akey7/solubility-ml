@@ -62,6 +62,6 @@ Analyze the performance of the model
 ``` {r}
 test_results <- tibble(
   SdTestSolubilities = sd(test_analysis$Solubility),
-  rmse_test_solubilites = sqrt(mean(test_analysis$Residual ** 2))
+  RMSE = sqrt(mean(test_analysis$Residual ** 2))
 )
 ```
