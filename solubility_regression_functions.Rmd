@@ -78,14 +78,6 @@ analyzeSolubilityModel <- function(model, test_data) {
 Make a model and run it!
 
 ``` {r}
-#compound = Compound.ID, 
-#    mw = Molecular.Weight, 
-#    h_bond_donors = Number.of.H.Bond.Donors, 
-#    rings = Number.of.Rings, 
-#    rotatable_bonds = Number.of.Rotatable.Bonds, 
-#    psa = Polar.Surface.Area, 
-#    solubility = measured.log.solubility.in.mols.per.litre
-
 split <- solubilityTrainTestSplit(df)
 test <- split$test
 everything_model <- lm(solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa, test)
