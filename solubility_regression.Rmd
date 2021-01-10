@@ -25,7 +25,8 @@ df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
     rings = Number.of.Rings, 
     rotatable_bonds = Number.of.Rotatable.Bonds, 
     psa = Polar.Surface.Area, 
-    solubility = measured.log.solubility.in.mols.per.litre
+    solubility = measured.log.solubility.in.mols.per.litre,
+    minimum_degree = Minimum.Degree
 )
 ```
 
@@ -87,6 +88,6 @@ Make a model and run it!
 ``` {r}
 split <- solubilityTrainTestSplit(df)
 test <- split$test
-everything_model <- lm(solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa, test)
+everything_model <- lm(solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa + minimum_degree, test)
 result <- analyzeSolubilityModel(everything_model, test)
 ```
