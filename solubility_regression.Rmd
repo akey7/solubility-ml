@@ -20,10 +20,10 @@ Now make things happen
 
 ``` {r}
 df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
-  select(Compound = Compound.ID, MW = Molecular.Weight, HBondDonors = Number.of.H.Bond.Donors, Rings = Number.of.Rings, RotatableBonds = Number.of.Rotatable.Bonds, PSA = Polar.Surface.Area, solubility = measured.log.solubility.in.mols.per.litre)
+  select(Compound = Compound.ID, MW = Molecular.Weight, HBondDonors = Number.of.H.Bond.Donors, Rings = Number.of.Rings, RotatableBonds = Number.of.Rotatable.Bonds, PSA = Polar.Surface.Area, Solubility = measured.log.solubility.in.mols.per.litre)
 ```
 
-Do a simple train test split
+Do a simple train test split at 75% / 25%
 
 ``` {r}
 split <- 0.75
@@ -33,8 +33,35 @@ train_row <- round(nrow(shuffled) * split)
 test_row <- train_row + 1
 train <- shuffled[1:train_row, ]
 test <- shuffled[test_row:nrow(shuffled), ]
-train_compounds <- train %>%
-  pull(Compound)
-test_compounds <- test %>%
-  pull(Compound)
+train_compounds <- train$Compound
+test_compounds <- test$Compound
+train_features <- train %>%
+  select(-Compound)
+test_features <- test %>%
+  select(-Compound)
+```
+
+Now train a model on all of the features available, reassemble a tibble
+
+``` {r}
+model <- lm(Solubility ~ MW + HBondDonors + Rings + RotatableBonds + PSA, train_features)
+```
+
+Reassemble a tibble with the predicted solubilties and the names of the compounds.
+
+``` {r}
+test_predictions <- predict(model, test_features)
+test_analysis <- test_features %>%
+  mutate(SolubilityPred = test_predictions) %>%
+  mutate(Compound = test_compounds) %>%
+  mutate(Residual = Solubility - SolubilityPred)
+```
+
+Analyze the performance of the model
+
+``` {r}
+test_results <- tibble(
+  SdTestSolubilities = sd(test_analysis$Solubility),
+  rmse_test_solubilites = sqrt(mean(test_analysis$Residual ** 2))
+)
 ```
