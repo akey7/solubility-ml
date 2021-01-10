@@ -1,0 +1,40 @@
+---
+title: "Untitled"
+author: "Alicia Key"
+date: "1/9/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load the libraries
+
+```{r}
+library(tidyverse)
+```
+
+Now make things happen
+
+
+``` {r}
+df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
+  select(Compound = Compound.ID, MW = Molecular.Weight, HBondDonors = Number.of.H.Bond.Donors, Rings = Number.of.Rings, RotatableBonds = Number.of.Rotatable.Bonds, PSA = Polar.Surface.Area, solubility = measured.log.solubility.in.mols.per.litre)
+```
+
+Do a simple train test split
+
+``` {r}
+split <- 0.75
+sample_indecies <- sample(nrow(df), nrow(df))
+shuffled <- df[sample_indecies, ]
+train_row <- round(nrow(shuffled) * split)
+test_row <- train_row + 1
+train <- shuffled[1:train_row, ]
+test <- shuffled[test_row:nrow(shuffled), ]
+train_compounds <- train %>%
+  pull(Compound)
+test_compounds <- test %>%
+  pull(Compound)
+```
