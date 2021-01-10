@@ -83,11 +83,16 @@ analyzeSolubilityModel <- function(model, test_data) {
 }
 ```
 
-Make a model and run it!
+Do the train test split
 
 ``` {r}
 split <- solubilityTrainTestSplit(df)
 test <- split$test
+```
+
+Now, try a model with all possible predictors
+
+``` {r}
 everything_model <- lm(solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa + minimum_degree, test)
 result <- analyzeSolubilityModel(everything_model, test)
 ```
