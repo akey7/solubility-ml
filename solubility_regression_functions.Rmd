@@ -1,80 +1,85 @@
 ---
-title: "Untitled"
+title: "solubility_regression_functions"
 author: "Alicia Key"
-date: "1/9/2021"
+date: "1/10/2021"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(broom)
+library(ggplot2)
 ```
 
-Load the libraries
-
-```{r}
-library(tidyverse)
-```
-
-Now make things happen
-
+Read in the main dataframe and rename the columns
 
 ``` {r}
 df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
-  select(Compound = Compound.ID, MW = Molecular.Weight, HBondDonors = Number.of.H.Bond.Donors, Rings = Number.of.Rings, RotatableBonds = Number.of.Rotatable.Bonds, PSA = Polar.Surface.Area, Solubility = measured.log.solubility.in.mols.per.litre)
+  select(
+    compound = Compound.ID, 
+    mw = Molecular.Weight, 
+    h_bond_donors = Number.of.H.Bond.Donors, 
+    rings = Number.of.Rings, 
+    rotatable_bonds = Number.of.Rotatable.Bonds, 
+    psa = Polar.Surface.Area, 
+    solubility = measured.log.solubility.in.mols.per.litre
+)
 ```
 
-Do a simple train test split at 75% / 25%
+Now define a few functions to run the analysis
 
 ``` {r}
-set.seed(13)
-split <- 0.75
-sample_indecies <- sample(nrow(df), nrow(df))
-shuffled <- df[sample_indecies, ]
-train_row <- round(nrow(shuffled) * split)
-test_row <- train_row + 1
-train <- shuffled[1:train_row, ]
-test <- shuffled[test_row:nrow(shuffled), ]
-train_compounds <- train$Compound
-outer_test_compounds <- test$Compound
-outer_train_features <- train %>%
-  select(-Compound)
-outer_test_features <- test %>%
-  select(-Compound)
-```
-
-Create a function to reassemble the test tibble and analyze the performance of the model.
-
-``` {r}
-predictAndAnalyze <- function(model, test_features, test_compounds) {
-  test_predictions <- predict(model, test_features)
-  test_analysis <- test_features %>%
-    mutate(SolubilityPred = test_predictions) %>%
-    mutate(Compound = test_compounds) %>%
-    mutate(Residual = Solubility - SolubilityPred)
-  test_solubility_sd <- sd(test_analysis$Residual)
-  test_solubility_rmse <- sqrt(mean(test_analysis$Residual ** 2))
+solubilityTrainTestSplit <- function(all_data, split_fraction = 0.75, random_seed = 13) {
+  # Shuffle based on random seed
+  set.seed(random_seed)
+  sample_indecies <- sample(nrow(all_data), nrow(all_data))
+  shuffled <- all_data[sample_indecies, ]
+  
+  # Train test split
+  train_row <- round(nrow(shuffled) * split_fraction)
+  test_row <- train_row + 1
+  train <- shuffled[1:train_row, ]
+  test <- shuffled[test_row:nrow(shuffled), ]
+  
+  # Now create the final list that is returned
   list(
-    TestSolubilitySD = test_solubility_sd,
-    TestSolubilityRMSE = test_solubility_rmse,
-    TestAnalysis = test_analysis
+    train = train,
+    test = test
+  )
+}
+
+analyzeSolubilityModel <- function(model, test_data) {
+  # Run the prediction
+  predicted_solbilities <- predict(model, test_data)
+  
+  # Assemble the compounds and predictions back onto the
+  # train features
+  
+  test_results <- test_data %>%
+    mutate(prediction = predicted_solbilities) %>%
+    mutate(residual = solubility - prediction)
+  
+  # Calculate the standard deviation and RMSE
+  sd_solubilities <- sd(test_results$solubility)
+  rmse <- sqrt(mean(test_results$residual ^ 2))
+  
+  # Create a list to return to the caller
+  list(
+    sd_solubilities = sd_solubilities,
+    rmse = rmse,
+    test_results = test_results
   )
 }
 ```
 
-Now test a model using all the predictors
+Make a model and run it!
 
 ``` {r}
-all_predictors <-  lm(Solubility ~ MW + HBondDonors + Rings + RotatableBonds + PSA, train_features)
-result_all_predictors <- predictAndAnalyze(model = all_predictors, test_features = outer_test_features, test_compounds = outer_test_compounds)
-print(paste("Actual solubility SD of model with all predictors", result_all_predictors$TestSolubilitySD))
-print(paste("RMSE of predicted solubilities of model with all predcitors", result_all_predictors$TestSolubilityRMSE))
-```
-
-Now just a few predictors
-
-``` {r}
-limited_predictors <- lm(Solubility ~ MW + RotatableBonds, train_features)
-result_all_predictors <- predictAndAnalyze(model = all_predictors, test_features = outer_test_features, test_compounds = outer_test_compounds)
-print(paste("Actual solubility SD of model with limited predictors", result_all_predictors$TestSolubilitySD))
-print(paste("RMSE of predicted solubilities of model with limited predcitors", result_all_predictors$TestSolubilityRMSE))
+split <- solubilityTrainTestSplit(df)
+test <- split$test
+everything_model <- lm(solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa, test)
+result <- analyzeSolubilityModel(everything_model, test)
 ```
