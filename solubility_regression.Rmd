@@ -66,11 +66,18 @@ analyzeSolubilityModel <- function(model, test_data) {
   sd_solubilities <- sd(test_results$solubility)
   rmse <- sqrt(mean(test_results$residual ^ 2))
   
+  # calculate r_squared
+  rss <- sum(test_results$residual ^ 2)
+  total_error <- test_results$solubility - mean(test_results$solubility)
+  tss <- sum(total_error ^ 2)
+  r_squared <- 1 - (rss / tss)
+  
   # Create a list to return to the caller
   list(
     sd_solubilities = sd_solubilities,
     rmse = rmse,
-    test_results = test_results
+    test_results = test_results,
+    r_squared = r_squared
   )
 }
 ```
