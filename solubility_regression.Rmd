@@ -88,11 +88,19 @@ Do the train test split
 ``` {r}
 split <- solubilityTrainTestSplit(df)
 test <- split$test
+train <- split$train
 ```
 
 Now, try a model with all possible predictors
 
 ``` {r}
-everything_model <- lm(solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa + minimum_degree, test)
-result <- analyzeSolubilityModel(everything_model, test)
+everything_model <- lm(solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa + minimum_degree, train)
+everything_result <- analyzeSolubilityModel(everything_model, test)
+```
+
+Now, try to reduce the number of features
+
+``` {r}
+limited_model <- lm(solubility ~ mw + h_bond_donors, train)
+limited_result <- analyzeSolubilityModel(limited_model, test)
 ```
