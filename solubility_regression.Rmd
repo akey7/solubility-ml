@@ -153,25 +153,39 @@ First, bar plots and histograms of the features.
 
 ``` {r}
 p1 <- ggplot(df, aes(x = mw)) +
-  geom_histogram(bins = 10)
+  geom_histogram(bins = 10) +
+  labs(title = "(a)") +
+  theme_classic()
 
 p2 <- ggplot(df, aes(x = psa)) +
-  geom_histogram(bins = 10)
+  geom_histogram(bins = 10) +
+  labs(title = "(b)") +
+  theme_classic()
 
 p3 <- ggplot(df, aes(x = solubility)) +
-  geom_histogram(bins = 10)
+  geom_histogram(bins = 10) +
+  labs(title = "(c)") +
+  theme_classic()
 
 p4 <- ggplot(df, aes(x = h_bond_donors)) +
-  geom_bar()
+  geom_bar() +
+  labs(title = "(d)") +
+  theme_classic()
 
 p5 <- ggplot(df, aes(x = rings)) +
-  geom_bar()
+  geom_bar() +
+  labs(title = "(e)") +
+  theme_classic()
 
 p6 <- ggplot(df, aes(x = rotatable_bonds)) +
-  geom_bar()
+  geom_bar() +
+  labs(title = "(f)") +
+  theme_classic()
 
 p7 <- ggplot(df, aes(x = minimum_degree)) +
-  geom_bar()
+  geom_bar() +
+  labs(title = "(g)") +
+  theme_classic()
 
 grid.arrange(p1, p2, p3, p4, p5, p6, p7, nrow = 3)
 ```
@@ -182,27 +196,39 @@ Now make molecular weight vs psa, solubility, h_bond_donors, rings, rotatable_bo
 alpha = 0.1
 p1 <- ggplot(df, aes(x = psa, y = mw)) +
   geom_jitter(alpha = alpha) +
-  geom_smooth(method = "lm", se = FALSE)
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(a)") +
+  theme_classic()
 
 p2 <- ggplot(df, aes(x = solubility, y = mw)) +
   geom_jitter(alpha = alpha) +
-  geom_smooth(method = "lm", se = FALSE)
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(b)") +
+  theme_classic()
 
 p3 <- ggplot(df, aes(x = h_bond_donors, y = mw)) +
   geom_jitter(alpha = alpha, width = 0.1) +
-  geom_smooth(method = "lm", se = FALSE)
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(c)") +
+  theme_classic()
 
 p4 <- ggplot(df, aes(x = rings, y = mw)) +
   geom_jitter(alpha = alpha, width = 0.1) +
-  geom_smooth(method = "lm", se = FALSE)
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(d)") +
+  theme_classic()
 
 p5 <- ggplot(df, aes(x = rotatable_bonds, y = mw)) +
   geom_jitter(alpha = alpha, width = 0.1) +
-  geom_smooth(method = "lm", se = FALSE)
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(e)") +
+  theme_classic()
 
 p6 <- ggplot(df, aes(x = minimum_degree, y = mw)) +
   geom_jitter(alpha = alpha, width = 0.1) +
-  geom_smooth(method = "lm", se = FALSE)
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(f)") +
+  theme_classic()
 
 grid.arrange(p1, p2, p3, p4, p5, p6, nrow = 2)
 ```
