@@ -9,7 +9,6 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(readr)
 library(dplyr)
-library(tidyr)
 library(ggplot2)
 library(gridExtra)
 library(ranger)
