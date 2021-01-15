@@ -10,8 +10,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(readr)
 library(dplyr)
 library(tidyr)
-library(broom)
 library(ggplot2)
+library(gridExtra)
 library(ranger)
 ```
 
@@ -149,26 +149,60 @@ rf_everything_result
 
 # Some exploratory visual analytics
 
+First, bar plots and histograms of the features.
+
 ``` {r}
-ggplot(df, aes(x = mw)) +
+p1 <- ggplot(df, aes(x = mw)) +
   geom_histogram(bins = 10)
 
-ggplot(df, aes(x = psa)) +
+p2 <- ggplot(df, aes(x = psa)) +
   geom_histogram(bins = 10)
 
-ggplot(df, aes(x = solubility)) +
+p3 <- ggplot(df, aes(x = solubility)) +
   geom_histogram(bins = 10)
 
-ggplot(df, aes(x = h_bond_donors)) +
+p4 <- ggplot(df, aes(x = h_bond_donors)) +
   geom_bar()
 
-ggplot(df, aes(x = rings)) +
+p5 <- ggplot(df, aes(x = rings)) +
   geom_bar()
 
-ggplot(df, aes(x = rotatable_bonds)) +
+p6 <- ggplot(df, aes(x = rotatable_bonds)) +
   geom_bar()
 
-ggplot(df, aes(x = minimum_degree)) +
+p7 <- ggplot(df, aes(x = minimum_degree)) +
   geom_bar()
+
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, nrow = 3)
 ```
 
+Now make molecular weight vs psa, solubility, h_bond_donors, rings, rotatable_bonds
+
+``` {r}
+alpha = 0.1
+p1 <- ggplot(df, aes(x = psa, y = mw)) +
+  geom_jitter(alpha = alpha) +
+  geom_smooth(method = "lm", se = FALSE)
+
+p2 <- ggplot(df, aes(x = solubility, y = mw)) +
+  geom_jitter(alpha = alpha) +
+  geom_smooth(method = "lm", se = FALSE)
+
+p3 <- ggplot(df, aes(x = h_bond_donors, y = mw)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(method = "lm", se = FALSE)
+
+p4 <- ggplot(df, aes(x = rings, y = mw)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(method = "lm", se = FALSE)
+
+p5 <- ggplot(df, aes(x = rotatable_bonds, y = mw)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(method = "lm", se = FALSE)
+
+p6 <- ggplot(df, aes(x = minimum_degree, y = mw)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(method = "lm", se = FALSE)
+
+grid.arrange(p1, p2, p3, p4, p5, p6, nrow = 2)
+```
