@@ -12,6 +12,7 @@ library(dplyr)
 library(tidyr)
 library(broom)
 library(ggplot2)
+library(ranger)
 ```
 
 Read in the main dataframe and rename the columns
@@ -52,9 +53,39 @@ solubilityTrainTestSplit <- function(all_data, split_fraction = 0.75, random_see
   )
 }
 
-analyzeSolubilityModel <- function(model, test_data) {
+analyzeSolubilityLinearModel <- function(model, test_data) {
   # Run the prediction
   predicted_solbilities <- predict(model, test_data)
+  
+  # Assemble the compounds and predictions back onto the
+  # train features
+  
+  test_results <- test_data %>%
+    mutate(prediction = predicted_solbilities) %>%
+    mutate(residual = solubility - prediction)
+  
+  # Calculate the standard deviation and RMSE
+  sd_solubilities <- sd(test_results$solubility)
+  rmse <- sqrt(mean(test_results$residual ^ 2))
+  
+  # calculate r_squared
+  rss <- sum(test_results$residual ^ 2)
+  total_error <- test_results$solubility - mean(test_results$solubility)
+  tss <- sum(total_error ^ 2)
+  r_squared <- 1 - (rss / tss)
+  
+  # Create a list to return to the caller
+  list(
+    sd_solubilities = sd_solubilities,
+    rmse = rmse,
+    test_results = test_results,
+    r_squared = r_squared
+  )
+}
+
+analyzeSolubilityRandomForestModel <- function(model, test_data) {
+  # Run the prediction
+  predicted_solbilities <- predict(model, test_data)$predictions
   
   # Assemble the compounds and predictions back onto the
   # train features
@@ -91,16 +122,27 @@ test <- split$test
 train <- split$train
 ```
 
-Now, try a model with all possible predictors
+## Baseline model
+
+Simple linear model, all predictors.
 
 ``` {r}
-everything_model <- lm(solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa + minimum_degree, train)
-everything_result <- analyzeSolubilityModel(everything_model, test)
+lm_everything_model <- lm(solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa + minimum_degree, train)
+lm_everything_result <- analyzeSolubilityLinearModel(lm_everything_model, test)
+lm_everything_result
 ```
 
-Now, try to reduce the number of features
+## Random forest model
+
+Now try a random forest model on these data. Use all the predictors
 
 ``` {r}
-limited_model <- lm(solubility ~ mw + h_bond_donors, train)
-limited_result <- analyzeSolubilityModel(limited_model, test)
+rf_everything_model <- ranger(
+  solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa + minimum_degree,
+  train,
+  num.trees = 500,
+  respect.unordered.factors = "order"
+)
+rf_everything_result <- analyzeSolubilityRandomForestModel(rf_everything_model, test)
+rf_everything_result
 ```
