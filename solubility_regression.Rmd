@@ -146,3 +146,29 @@ rf_everything_model <- ranger(
 rf_everything_result <- analyzeSolubilityRandomForestModel(rf_everything_model, test)
 rf_everything_result
 ```
+
+# Some exploratory visual analytics
+
+``` {r}
+ggplot(df, aes(x = mw)) +
+  geom_histogram(bins = 10)
+
+ggplot(df, aes(x = psa)) +
+  geom_histogram(bins = 10)
+
+ggplot(df, aes(x = solubility)) +
+  geom_histogram(bins = 10)
+
+ggplot(df, aes(x = h_bond_donors)) +
+  geom_bar()
+
+ggplot(df, aes(x = rings)) +
+  geom_bar()
+
+ggplot(df, aes(x = rotatable_bonds)) +
+  geom_bar()
+
+ggplot(df, aes(x = minimum_degree)) +
+  geom_bar()
+```
+
