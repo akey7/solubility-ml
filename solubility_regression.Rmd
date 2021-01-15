@@ -219,3 +219,9 @@ p5 <- ggplot(df, aes(x = rotatable_bonds, y = mw)) +
 
 grid.arrange(p1, p2, p3, p4, p5, nrow = 2)
 ```
+
+The mean of log solubility
+
+``` {r}
+mean(df$solubility)
+```
