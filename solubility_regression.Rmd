@@ -25,8 +25,7 @@ df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
     rings = Number.of.Rings, 
     rotatable_bonds = Number.of.Rotatable.Bonds, 
     psa = Polar.Surface.Area, 
-    solubility = measured.log.solubility.in.mols.per.litre,
-    minimum_degree = Minimum.Degree
+    solubility = measured.log.solubility.in.mols.per.litre
 )
 ```
 
@@ -126,7 +125,7 @@ train <- split$train
 Simple linear model, all predictors.
 
 ``` {r}
-lm_everything_model <- lm(solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa + minimum_degree, train)
+lm_everything_model <- lm(solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa, train)
 lm_everything_result <- analyzeSolubilityLinearModel(lm_everything_model, test)
 lm_everything_result
 ```
@@ -137,7 +136,7 @@ Now try a random forest model on these data. Use all the predictors
 
 ``` {r}
 rf_everything_model <- ranger(
-  solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa + minimum_degree,
+  solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa,
   train,
   num.trees = 500,
   respect.unordered.factors = "order"
@@ -181,12 +180,7 @@ p6 <- ggplot(df, aes(x = rotatable_bonds)) +
   labs(title = "(f)") +
   theme_classic()
 
-p7 <- ggplot(df, aes(x = minimum_degree)) +
-  geom_bar() +
-  labs(title = "(g)") +
-  theme_classic()
-
-grid.arrange(p1, p2, p3, p4, p5, p6, p7, nrow = 3)
+grid.arrange(p1, p2, p3, p4, p5, p6, nrow = 3)
 ```
 
 Now make molecular weight vs psa, solubility, h_bond_donors, rings, rotatable_bonds
@@ -223,11 +217,5 @@ p5 <- ggplot(df, aes(x = rotatable_bonds, y = mw)) +
   labs(title = "(e)") +
   theme_classic()
 
-p6 <- ggplot(df, aes(x = minimum_degree, y = mw)) +
-  geom_jitter(alpha = alpha, width = 0.1) +
-  geom_smooth(method = "lm", se = FALSE) +
-  labs(title = "(f)") +
-  theme_classic()
-
-grid.arrange(p1, p2, p3, p4, p5, p6, nrow = 2)
+grid.arrange(p1, p2, p3, p4, p5, nrow = 2)
 ```
