@@ -26,7 +26,7 @@ A number of compounds in this dataset are well-known, even outside the chemistry
 |---|---|
 [Sucrose](https://en.wikipedia.org/wiki/Sugar) | Sugar
 [Erythritol](https://en.wikipedia.org/wiki/Erythritol) | Sugar substitute
-[Caffiene](https://en.wikipedia.org/wiki/Caffeine) | I drank too much of it right now...
+[Caffiene](https://en.wikipedia.org/wiki/Caffeine) | Coffee time!
 [Fructose](https://en.wikipedia.org/wiki/Fructose) | Component of high fructose corn syrup
 
 ##  Dataset Description
@@ -169,16 +169,13 @@ The first few rows of the train dataset:
 ``` {r, echo = FALSE}
 knitr::kable(head(train))
 ```
-## Linear Model
-
-
-
 
 And the first few rows of the test dataset:
 
 ``` {r, echo = FALSE}
 knitr::kable(head(test))
 ```
+
 ## Formula
 
 All models use the same formula based on all the predictors.
@@ -286,4 +283,37 @@ rf_result_df = tibble(
 
 knitr::kable(rf_result_df)
 ```
-The performance of the random forest model is substantially better than the linear model. The RMSE of 0.861 is less than half the solubility's standard deviation of 2.09. The random forest explains much more of the variability of the solubiltiy with an R^2 value of 0.830. Anecdotally, in this configuration and on this dataset, the random forest execution time is similar to that of the linear model.
+The performance of the random forest model is substantially better than the linear model. The RMSE of 0.861 is less than half the solubility's standard deviation of 2.09. The random forest explains much more of the variability of the solubility with an R^2 value of 0.830. Anecdotally, in this configuration and on this dataset, the random forest execution time is similar to that of the linear model.
+
+## Comparing linear and random forest models
+
+Explanation here.
+
+``` {r, fig.height = 7, fig.width = 7, fig.align = "center", echo = FALSE, message = FALSE, warnings = FALSE, fig.cap = "Relationship of molecular weight to other variables"}
+alpha <- 0.5
+
+linear_result_plot <- ggplot(lm_result$test_results, aes(x = prediction, y = solubility)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(se = FALSE) +
+  labs(title = "Lienear model solubility vs prediction")
+
+rf_result_plot <- ggplot(rf_result$test_results, aes(x = prediction, y = solubility)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(se = FALSE) +
+  labs(title = "Random forest model solubility vs prediction")
+
+grid.arrange(linear_result_plot, rf_result_plot, nrow = 2)
+```
+
+And a table comparing them
+
+``` {r, echo = FALSE}
+model_comparison_df <- tibble(
+  model = c("Linear", "Random forest"),
+  rmse = c(lm_result$rmse, rf_result$rmse),
+  r_squared = c(lm_result$r_squared, rf_result$r_squared)
+)
+
+knitr::kable(model_comparison_df)
+```
+
