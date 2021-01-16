@@ -1,9 +1,11 @@
 ---
 title: "Solubility Regression with Linear and Random Forest Models"
 author: "Alicia Key"
-date: 2021-01-18
-categories: ["R"]
-tags: ["chemistry", "r"]
+date: '2021-01-18'
+tags:
+- chemistry
+- r
+categories: R
 ---
 
 ```{r setup, include=FALSE}
@@ -234,7 +236,7 @@ The RMSE of 1.196 is less than the test solubility's standard deviation of 2.092
 
 ## Random Forest Regression
 
-The second model is the random forest model. For the random forest, I use the ranger package. The model uses 500 trees and is trained and tested with the same tran and test data as the original linear model. Table 4 shows the random forest's prediction performance on the test data after training.
+The second model is the random forest model. For the random forest, [I use the ranger package](https://www.rdocumentation.org/packages/ranger/versions/0.12.1/topics/ranger). The model uses 500 trees and is trained and tested with the same tran and test data as the original linear model. Table 4 shows the random forest's prediction performance on the test data after training.
 
 ##### Table 4: Random forest test data performance
 
