@@ -225,7 +225,7 @@ analyzeSolubilityLinearModel <- function(model, test_data) {
 
 lm_model <- lm(solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa, train)
 lm_result <- analyzeSolubilityLinearModel(lm_model, test)
-lm_result_df <- data_frame(
+lm_result_df <- tibble(
   metric = c("sd(test$solubility)", "RMSE", "R^2"),
   value = c(sd(test$solubility), lm_result$rmse, lm_result$r_squared)
 )
@@ -279,7 +279,7 @@ rf_model <- ranger(
 )
 
 rf_result <- analyzeSolubilityRandomForestModel(rf_model, test)
-rf_result_df = data_frame(
+rf_result_df = tibble(
   metric = c("sd(test$solubility)", "RMSE", "R^2"),
   value = c(sd(test$solubility), rf_result$rmse, rf_result$r_squared)
 )
