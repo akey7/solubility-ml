@@ -29,7 +29,7 @@ A number of compounds in this dataset are well-known, even outside the chemistry
 
 ##  Dataset Description
 
-The original report published a dataset of compounds represented as SMILES strings. SMILES strings are a compact and text-based method of specifying chemical structures. This study will use a preprocessed dataset from deepchem.io, which contains features parsed from these SMILES strings. This study uses a subset of these preprocessed features, which are listed in Table 2. 
+The original report published a dataset of compounds represented as SMILES strings. SMILES strings are a compact and text-based method of specifying chemical structures. This study will use a preprocessed dataset from deepchem.io, which contains features parsed from these SMILES strings. [You can browse the file on GitHub.](https://github.com/deepchem/deepchem/blob/master/datasets/delaney-processed.csv)This study uses a subset of these preprocessed features, which are listed in Table 2. 
 
 ##### Table 2: Features of each compound used in the regression 
 
@@ -167,13 +167,121 @@ The first few rows of the train dataset:
 ``` {r, echo = FALSE}
 knitr::kable(head(train))
 ```
+## Linear Model
+
+
+
 
 And the first few rows of the test dataset:
 
 ``` {r, echo = FALSE}
 knitr::kable(head(test))
 ```
+## Formula
 
-## Footnotes
-1. TODO: Add the h-bond donors specification
-2. TODO: Add the rotatable bonds specification
+All models use the same formula based on all the predictors.
+
+``` {r}
+formula <- solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa
+```
+
+## Linear Model
+
+Our first stop is the linear model. Table 3 shows the performance of the linear model after training when I use it to predict the solubilties in the test dataset.
+
+##### Table 3: linear model performance on test data
+``` {r, echo = FALSE}
+analyzeSolubilityLinearModel <- function(model, test_data) {
+  # Run the prediction
+  predicted_solbilities <- predict(model, test_data)
+  
+  # Assemble the compounds and predictions back onto the
+  # train features
+  
+  test_results <- test_data %>%
+    mutate(prediction = predicted_solbilities) %>%
+    mutate(residual = solubility - prediction)
+  
+  # Calculate the standard deviation and RMSE
+  sd_solubilities <- sd(test_results$solubility)
+  rmse <- sqrt(mean(test_results$residual ^ 2))
+  
+  # calculate r_squared
+  rss <- sum(test_results$residual ^ 2)
+  total_error <- test_results$solubility - mean(test_results$solubility)
+  tss <- sum(total_error ^ 2)
+  r_squared <- 1 - (rss / tss)
+  
+  # Create a list to return to the caller
+  list(
+    sd_solubilities = sd_solubilities,
+    rmse = rmse,
+    test_results = test_results,
+    r_squared = r_squared
+  )
+}
+
+lm_model <- lm(solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa, train)
+lm_result <- analyzeSolubilityLinearModel(lm_model, test)
+lm_result_df <- data_frame(
+  metric = c("sd(test$solubility)", "RMSE", "R^2"),
+  value = c(sd(test$solubility), lm_result$rmse, lm_result$r_squared)
+)
+knitr::kable(lm_result_df)
+```
+
+The RMSE of 1.196 is less than the test solubility's standard deviation of 2.092, but the R^2 of 0.672 shows the linear model does not explain much of the variance of underlying solubility.
+
+## Random Forest Regression
+
+The second model is the random forest model. For the random forest, I use the ranger package. The model uses 500 trees and is trained and tested with the same tran and test data as the original linear model. Table 4 shows the random forest's prediction performance on the test data after training.
+
+##### Table 4: Random forest test data performance
+
+``` {r, echo = FALSE}
+analyzeSolubilityRandomForestModel <- function(model, test_data) {
+  # Run the prediction
+  predicted_solbilities <- predict(model, test_data)$predictions
+  
+  # Assemble the compounds and predictions back onto the
+  # train features
+  
+  test_results <- test_data %>%
+    mutate(prediction = predicted_solbilities) %>%
+    mutate(residual = solubility - prediction)
+  
+  # Calculate the standard deviation and RMSE
+  sd_solubilities <- sd(test_results$solubility)
+  rmse <- sqrt(mean(test_results$residual ^ 2))
+  
+  # calculate r_squared
+  rss <- sum(test_results$residual ^ 2)
+  total_error <- test_results$solubility - mean(test_results$solubility)
+  tss <- sum(total_error ^ 2)
+  r_squared <- 1 - (rss / tss)
+  
+  # Create a list to return to the caller
+  list(
+    sd_solubilities = sd_solubilities,
+    rmse = rmse,
+    test_results = test_results,
+    r_squared = r_squared
+  )
+}
+
+rf_model <- ranger(
+  formula,
+  train,
+  num.trees = 500,
+  respect.unordered.factors = "order"
+)
+
+rf_result <- analyzeSolubilityRandomForestModel(rf_model, test)
+rf_result_df = data_frame(
+  metric = c("sd(test$solubility)", "RMSE", "R^2"),
+  value = c(sd(test$solubility), rf_result$rmse, rf_result$r_squared)
+)
+
+knitr::kable(rf_result_df)
+```
+The performance of the random forest model is substantially better than the linear model. The RMSE of 0.861 is less than half the solubility's standard deviation of 2.09. The random forest explains much more of the variability of the solubiltiy with an R^2 value of 0.830. Anecdotally, in this configuration and on this dataset, the random forest execution time is similar to that of the linear model.
