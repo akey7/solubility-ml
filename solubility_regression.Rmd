@@ -2,10 +2,8 @@
 title: "Solubility Regression with Linear and Random Forest Models"
 author: "Alicia Key"
 date: '2021-01-18'
-tags:
-- chemistry
-- r
-categories: R
+categories: ["R"]
+tags: ["chemistry", "r"]
 ---
 
 ```{r setup, include=FALSE}
@@ -17,7 +15,7 @@ library(gridExtra)
 library(ranger)
 ```
 
-Aqueous solubility (ability to dissolve in water) is an essential property of a chemical compound important in the laboratory. Can the solubility of a compound be predicted based on a chemical structure alone? John Delaney posed this predictions question in 2004 [(Delaney 2004)](https://pubs.acs.org/doi/10.1021/ci034243x) and wrote a paper with numerous citations in the chemistry literature. This study will take a dataset similar to that study and use linear and random forest regression to predict the compounds' solubilities.
+Aqueous solubility (ability to dissolve in water) is an essential property of a chemical compound important in the laboratory. Can the solubility of a compound be predicted based on a chemical structure alone? John Delaney posed this predictions question in 2004 [(Delaney 2004)](https://pubs.acs.org/doi/10.1021/ci034243x) and wrote a paper with numerous citations in the chemistry literature. This study will take a dataset similar to that study and use linear and random forest regression to predict the compounds' solubilities. *The random forest model is a much better predictor of solubilities*.
 
 A number of compounds in this dataset are well-known, even outside the chemistry community. Here is a sample of what lies inside the dataset:
 
@@ -164,13 +162,17 @@ test <- split$test
 train <- split$train
 ```
 
-The first few rows of the train dataset:
+Table 3 is the first few rows of the train dataset:
+
+##### Table 3
 
 ``` {r, echo = FALSE}
 knitr::kable(head(train))
 ```
 
-And the first few rows of the test dataset:
+Table 4 is the first few rows of the test dataset:
+
+##### Table 4
 
 ``` {r, echo = FALSE}
 knitr::kable(head(test))
@@ -189,6 +191,7 @@ formula <- solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa
 Our first stop is the linear model. Table 3 shows the performance of the linear model after training when I use it to predict the solubilties in the test dataset.
 
 ##### Table 3: linear model performance on test data
+
 ``` {r, echo = FALSE}
 analyzeSolubilityLinearModel <- function(model, test_data) {
   # Run the prediction
@@ -223,8 +226,8 @@ analyzeSolubilityLinearModel <- function(model, test_data) {
 lm_model <- lm(solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa, train)
 lm_result <- analyzeSolubilityLinearModel(lm_model, test)
 lm_result_df <- tibble(
-  metric = c("sd(test$solubility)", "RMSE", "R^2"),
-  value = c(sd(test$solubility), lm_result$rmse, lm_result$r_squared)
+  metric = c("RMSE", "R^2"),
+  value = c(lm_result$rmse, lm_result$r_squared)
 )
 knitr::kable(lm_result_df)
 ```
@@ -233,7 +236,7 @@ The RMSE of 1.196 is less than the test solubility's standard deviation of 2.092
 
 ## Random Forest Regression
 
-The second model is the random forest model. For the random forest, [I use the ranger package](https://www.rdocumentation.org/packages/ranger/versions/0.12.1/topics/ranger). The model uses 500 trees and is trained and tested with the same tran and test data as the original linear model. Table 4 shows the random forest's prediction performance on the test data after training.
+The second model is the random forest model. For the random forest, [I use the ranger package](https://www.rdocumentation.org/packages/ranger/versions/0.12.1/topics/ranger). The model uses 500 trees and is trained and tested with the same train and test data as the original linear model. Table 4 shows the random forest's prediction performance on the test data after training.
 
 ##### Table 4: Random forest test data performance
 
@@ -277,35 +280,18 @@ rf_model <- ranger(
 
 rf_result <- analyzeSolubilityRandomForestModel(rf_model, test)
 rf_result_df = tibble(
-  metric = c("sd(test$solubility)", "RMSE", "R^2"),
-  value = c(sd(test$solubility), rf_result$rmse, rf_result$r_squared)
+  metric = c("RMSE", "R^2"),
+  value = c(rf_result$rmse, rf_result$r_squared)
 )
 
 knitr::kable(rf_result_df)
 ```
-The performance of the random forest model is substantially better than the linear model. The RMSE of 0.861 is less than half the solubility's standard deviation of 2.09. The random forest explains much more of the variability of the solubility with an R^2 value of 0.830. Anecdotally, in this configuration and on this dataset, the random forest execution time is similar to that of the linear model.
 
 ## Comparing linear and random forest models
 
-Explanation here.
+Table 5 shows the performance metrics of the linear and random forest models.
 
-``` {r, fig.height = 7, fig.width = 7, fig.align = "center", echo = FALSE, message = FALSE, warnings = FALSE, fig.cap = "Relationship of molecular weight to other variables"}
-alpha <- 0.5
-
-linear_result_plot <- ggplot(lm_result$test_results, aes(x = prediction, y = solubility)) +
-  geom_jitter(alpha = alpha, width = 0.1) +
-  geom_smooth(se = FALSE) +
-  labs(title = "Lienear model solubility vs prediction")
-
-rf_result_plot <- ggplot(rf_result$test_results, aes(x = prediction, y = solubility)) +
-  geom_jitter(alpha = alpha, width = 0.1) +
-  geom_smooth(se = FALSE) +
-  labs(title = "Random forest model solubility vs prediction")
-
-grid.arrange(linear_result_plot, rf_result_plot, nrow = 2)
-```
-
-And a table comparing them
+##### Table 5
 
 ``` {r, echo = FALSE}
 model_comparison_df <- tibble(
@@ -317,3 +303,26 @@ model_comparison_df <- tibble(
 knitr::kable(model_comparison_df)
 ```
 
+Examining Table 5 shows reveals two comparisons between the models that are immediately apparent. The first comparison is their respective RMSE values when evaluated on the training dataset. Lower RMSE values are better. The standard deviation of log solubility in the test dataset is 2.092. This value compares nicely with the random forest's RMSE of 0.867, but it does not compare well with the linear model's RMSE of 1.196. The clear winner here, unsurprisingly, the random forest. The second comparison is their respective R^2 values.  R^2 values closer to 1.0 are better. The R^2 value of the linear model is a lowly 0.672, while the R^2 value for the random forest is much better at 0.828.
+
+Figure 3, which plots actual versus predicted solubilities, is my favorite comparison between the linear and random forest models. Recall that all solubilities are log solubilities, hence the negative values on the axes.
+
+``` {r, fig.height = 7, fig.width = 7, fig.align = "center", echo = FALSE, message = FALSE, warnings = FALSE, fig.cap = "actual vs. predicted values for both models"}
+alpha <- 0.5
+
+linear_result_plot <- ggplot(lm_result$test_results, aes(x = prediction, y = solubility)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(se = FALSE) +
+  labs(title = "(a) Linear model solubility vs prediction")
+
+rf_result_plot <- ggplot(rf_result$test_results, aes(x = prediction, y = solubility)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(se = FALSE) +
+  labs(title = "(b) Random forest model solubility vs prediction")
+
+grid.arrange(linear_result_plot, rf_result_plot, nrow = 2)
+```
+
+In Figure 3a, we find that the fit of the linear model isn't very linear. At the high end of log solubility, around 0, the model under and overpredicts numerous compounds. The fit between the solubility and the predictions meanders lazily through the model's points that aren't well-fitted.
+
+In contrast, Figure 3b reveals a random forest model that is much more well-fitted to the data. The trend line is nearly linear, and the points are clustered much closer to this trend line, which indicates a tighter model fit.
