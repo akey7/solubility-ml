@@ -29,7 +29,7 @@ A number of compounds in this dataset are well-known, even outside the chemistry
 
 ##  Dataset Description
 
-The original report published a dataset of compounds represented as SMILES strings. SMILES strings are a compact and text-based method of specifying chemical structures. This study will use a preprocessed dataset from deepchem.io, which contains features parsed from these SMILES strings. [You can browse the file on GitHub.](https://github.com/deepchem/deepchem/blob/master/datasets/delaney-processed.csv)This study uses a subset of these preprocessed features, which are listed in Table 2. 
+The original report published a dataset of compounds represented as SMILES strings. SMILES strings are a compact and text-based method of specifying chemical structures. This study will use a preprocessed dataset mentioned on [moleculenet.ai](http://moleculenet.ai/datasets-1) and distributed by deepchem.io, which contains features parsed from these SMILES strings. [You can browse the file on GitHub.](https://github.com/deepchem/deepchem/blob/master/datasets/delaney-processed.csv)This study uses a subset of these preprocessed features, which are listed in Table 2. 
 
 ##### Table 2: Features of each compound used in the regression 
 
