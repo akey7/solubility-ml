@@ -17,6 +17,8 @@ library(ranger)
 
 Aqueous solubility (ability to dissolve in water) is an essential property of a chemical compound important in the laboratory. Can the solubility of a compound be predicted based on a chemical structure alone? John Delaney posed this predictions question in 2004 [(Delaney 2004)](https://pubs.acs.org/doi/10.1021/ci034243x) and wrote a paper with numerous citations in the chemistry literature. This study will take a dataset similar to that study and use linear and random forest regression to predict the compounds' solubilities. *The random forest model is a much better predictor of solubilities*.
 
+This code for this study is implemented in R and is available in its entirety [on GitHub.](https://github.com/akey7/solubility-ml/blob/master/solubility_regression.Rmd)
+
 A number of compounds in this dataset are well-known, even outside the chemistry community. Here is a sample of what lies inside the dataset:
 
 ##### Table 1: Well-known compounds in the dataset
