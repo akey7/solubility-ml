@@ -7,15 +7,18 @@ tags: ["chemistry", "r"]
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.align = "center")
 library(readr)
 library(dplyr)
 library(ggplot2)
 library(gridExtra)
 library(ranger)
+library(tidyr)
 ```
 
-Aqueous solubility (ability to dissolve in water) is an essential property of a chemical compound important in the laboratory. Can the solubility of a compound be predicted based on a chemical structure alone? John Delaney posed this predictions question in 2004 [(Delaney 2004)](https://pubs.acs.org/doi/10.1021/ci034243x) and wrote a paper with numerous citations in the chemistry literature. This study will take a dataset similar to that study and use linear and random forest regression to predict the compounds' solubilities. *The random forest model is a much better predictor of solubilities*.
+Aqueous solubility (ability to dissolve in water) is an essential property of a chemical compound important in the laboratory. Can the solubility of a compound be predicted based on a chemical structure alone? John Delaney posed this predictions question in 2004 [(Delaney 2004)](https://pubs.acs.org/doi/10.1021/ci034243x) and wrote a paper with numerous citations in the chemistry literature. This study will take a dataset similar to that study and use linear and random forest regression to predict the compounds' solubilities.
+
+*The random forest model is a much better predictor of solubilities*.
 
 This code for this study is implemented in R and is available in its entirety [on GitHub.](https://github.com/akey7/solubility-ml/blob/master/solubility_regression.Rmd)
 
@@ -45,7 +48,7 @@ The original report published a dataset of compounds represented as SMILES strin
 
 ## Exploratory visualization
 
-``` {r include = FALSE}
+``` {r}
 df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
   select(
     compound = Compound.ID, 
@@ -60,75 +63,75 @@ df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
 
 Before I dive into the machine learning model, let's examine exploratory plots to get a feel for the data distribution. Figure 1 has histograms (for continuous variables) and bar plots (for discrete variables) to demonstrate the dataset's values' distributions. Figure 1a, 1b, 1d, 1e, and 1f show distributions of values favoring their respective range's low ends. Solubility, our response variable, has a broader spread above and below its mean of -3.05.
 
-``` {r, fig.height = 7, fig.width = 7, fig.align = "center", echo = FALSE, fig.cap = "Histograms and bar plots of variables"}
+``` {r, fig.height = 7, fig.width = 7, fig.cap = "Histograms and bar plots of variables"}
 p1 <- ggplot(df, aes(x = mw)) +
   geom_histogram(bins = 10) +
   labs(title = "(a)") +
-  theme_classic()
+  theme_minimal()
 
 p2 <- ggplot(df, aes(x = psa)) +
   geom_histogram(bins = 10) +
   labs(title = "(b)") +
-  theme_classic()
+  theme_minimal()
 
 p3 <- ggplot(df, aes(x = solubility)) +
   geom_histogram(bins = 10) +
   labs(title = "(c)") +
-  theme_classic()
+  theme_minimal()
 
 p4 <- ggplot(df, aes(x = h_bond_donors)) +
   geom_bar() +
   labs(title = "(d)") +
-  theme_classic()
+  theme_minimal()
 
 p5 <- ggplot(df, aes(x = rings)) +
   geom_bar() +
   labs(title = "(e)") +
-  theme_classic()
+  theme_minimal()
 
 p6 <- ggplot(df, aes(x = rotatable_bonds)) +
   geom_bar() +
   labs(title = "(f)") +
-  theme_classic()
+  theme_minimal()
 
 grid.arrange(p1, p2, p3, p4, p5, p6, nrow = 3)
 ```
 
 Figure 1a, 1b, 1d, 1e, and 1f show distributions of values favoring their respective range's low ends. Solubility, in Figure 1c, has a broader spread above and below its mean of -3.05.
 
-A number of the features of the molecules require lots of atoms. For example, a five-ring molecule will likely have a higher molecular weight than a three-ring molecule. Molecular weight has a special relationship with all other variables that denote each molecule's increasing structural complexity. Figure 2 plots molecular weight against all other variables, with a trend line for each relationship, as shown below.
+A number of the features of the molecules require lots of atoms. For example, a five-ring molecule will likely have a higher molecular weight than a three-ring molecule. Molecular weight has a special relationship with all other variables that denote each molecule's increasing structural complexity. Figure 2 plots molecular weight against all other variables, with a trend line for each relationship, as shown in the jittered scatter plots below.
 
-``` {r, fig.height = 7, fig.width = 7, fig.align = "center", echo = FALSE, message = FALSE, warnings = FALSE, fig.cap = "Relationship of molecular weight to other variables"}
+``` {r, fig.height = 7, fig.width = 7, fig.cap = "Relationship of molecular weight to other variables"}
 alpha = 0.1
 p1 <- ggplot(df, aes(x = psa, y = mw)) +
   geom_jitter(alpha = alpha) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(title = "(a)") +
-  theme_classic()
+  theme_minimal()
 
 p2 <- ggplot(df, aes(x = solubility, y = mw)) +
   geom_jitter(alpha = alpha) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(title = "(b)") +
-  theme_classic()
+  theme_minimal()
 
 p3 <- ggplot(df, aes(x = h_bond_donors, y = mw)) +
   geom_jitter(alpha = alpha, width = 0.1) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(title = "(c)") +
-  theme_classic()
+  theme_minimal()
 
 p4 <- ggplot(df, aes(x = rings, y = mw)) +
   geom_jitter(alpha = alpha, width = 0.1) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(title = "(d)") +
-  theme_classic()
+  theme_minimal()
 
 p5 <- ggplot(df, aes(x = rotatable_bonds, y = mw)) +
   geom_jitter(alpha = alpha, width = 0.1) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(title = "(e)") +
-  theme_classic()
+  theme_minimal()
 
 grid.arrange(p1, p2, p3, p4, p5, nrow = 3)
 ```
@@ -139,7 +142,7 @@ Figures 2a, 2c, 2d, 2e all exhibit increasing molecular weight with increased st
 
 All models use the same randomized train/test split. First, I shuffled the rows of the original dataset. Then, I selected the first 846 rows for the training set and the last 282 rows for the test dataset. I seeded the random number generator with a constant to ensure the same shuffles between model runs.
 
-``` {r, include = FALSE}
+``` {r}
 solubilityTrainTestSplit <- function(all_data, split_fraction = 0.75, random_seed = 13) {
   # Shuffle based on random seed
   set.seed(random_seed)
@@ -194,7 +197,7 @@ Our first stop is the linear model. Table 3 shows the performance of the linear 
 
 ##### Table 3: linear model performance on test data
 
-``` {r, echo = FALSE}
+``` {r}
 analyzeSolubilityLinearModel <- function(model, test_data) {
   # Run the prediction
   predicted_solbilities <- predict(model, test_data)
@@ -242,7 +245,7 @@ The second model is the random forest model. For the random forest, [I use the r
 
 ##### Table 4: Random forest test data performance
 
-``` {r, echo = FALSE}
+``` {r}
 analyzeSolubilityRandomForestModel <- function(model, test_data) {
   # Run the prediction
   predicted_solbilities <- predict(model, test_data)$predictions
@@ -295,7 +298,7 @@ Table 5 shows the performance metrics of the linear and random forest models.
 
 ##### Table 5
 
-``` {r, echo = FALSE}
+``` {r}
 model_comparison_df <- tibble(
   model = c("Linear", "Random forest"),
   rmse = c(lm_result$rmse, rf_result$rmse),
@@ -309,22 +312,70 @@ Examining Table 5 shows reveals two comparisons between the models that are imme
 
 Figure 3, which plots actual versus predicted solubilities, is my favorite comparison between the linear and random forest models. Recall that all solubilities are log solubilities, hence the negative values on the axes.
 
-``` {r, fig.height = 7, fig.width = 7, fig.align = "center", echo = FALSE, message = FALSE, warnings = FALSE, fig.cap = "actual vs. predicted values for both models"}
+``` {r, fig.height = 3.5, fig.width = 7, fig.align = "center", fig.cap = "actual vs. predicted values for both models"}
 alpha <- 0.5
 
 linear_result_plot <- ggplot(lm_result$test_results, aes(x = prediction, y = solubility)) +
   geom_jitter(alpha = alpha, width = 0.1) +
-  geom_smooth(se = FALSE) +
-  labs(title = "(a) Linear model solubility vs prediction")
+  labs(title = "(a) Linear") +
+  theme_minimal()
 
 rf_result_plot <- ggplot(rf_result$test_results, aes(x = prediction, y = solubility)) +
   geom_jitter(alpha = alpha, width = 0.1) +
-  geom_smooth(se = FALSE) +
-  labs(title = "(b) Random forest model solubility vs prediction")
+  labs(title = "(b) Random forest") +
+  theme_minimal()
 
-grid.arrange(linear_result_plot, rf_result_plot, nrow = 2)
+grid.arrange(linear_result_plot, rf_result_plot, nrow = 1)
 ```
 
-In Figure 3a, we find that the fit of the linear model isn't very linear. At the high end of log solubility, around 0, the model under and overpredicts numerous compounds. The fit between the solubility and the predictions meanders lazily through the model's points that aren't well-fitted.
+In Figure 3a, the linear model fit is lacking in the area of high predicted solubility. In this area, the actual solubilities take a wide range, from relatively insoluble to very soluble. At the edge of low predicted solubility, we find a range of actual solubilities.
 
-In contrast, Figure 3b reveals a random forest model that is much more well-fitted to the data. The trend line is nearly linear, and the points are clustered much closer to this trend line, which indicates a tighter model fit.
+In Figure 3b, the random forest model trends slightly more reliable. The random forest predicts high solubilities where there are actual high solubilities. Near the low end of the actual solubilities, there are numerous under and over predictions from the random forest.
+
+## Random forest failure analysis
+
+Since the random forest fared better, let's analyze what compounds make it fail. Are there any structural commonalities among the compounds that caused over or underpredictions? I will define underprediction as a residual > 1.0 and overprediction as a residual < 1.0. Remember that this is a log solubility scale, so these thresholds correspond to more than an order of magnitude difference in actual versus predicted solubility.
+
+
+Table 6 contains the mean values of molecular properties for the entire test compounds, the solubility-overpredicted compounds, and the solubility-underpredicted compounds. A caveat with these values is that h_bond_donors, rings, and rotatable_bonds must be integers greater than or equal to zero, so fractional values for these properties make no physical sense. However, fractional values can indicate trends in the data that are interesting.
+
+##### Table 6: Mean values of molecular properties
+
+``` {r}
+rf_overpredictions <- rf_result$test_results %>%
+  filter(residual < -1.0)
+
+rf_underpredictions <- rf_result$test_results %>%
+  filter(residual > 1.0)
+
+train_summary <- train %>%
+  select(!c("compound", "solubility")) %>%
+  pivot_longer(everything(), names_to = "feature", values_to = "test_mean") %>%
+  group_by(feature) %>%
+  summarize_all(mean)
+
+rf_overpredictions_summary <- rf_overpredictions %>%
+  select(!c("compound", "residual", "prediction", "solubility")) %>%
+  pivot_longer(everything(), names_to = "feature", values_to = "overpredicted_mean") %>%
+  group_by(feature) %>%
+  summarize_all(mean)
+
+rf_underpredictions_summary <- rf_underpredictions %>%
+  select(!c("compound", "residual", "prediction", "solubility")) %>%
+  pivot_longer(everything(), names_to = "feature", values_to = "underpredicted_mean") %>%
+  group_by(feature) %>%
+  summarize_all(mean)
+
+join_summaries <- train_summary %>%
+  inner_join(rf_overpredictions_summary, by = "feature") %>%
+  inner_join(rf_underpredictions_summary, by = "feature")
+
+knitr::kable(join_summaries)
+```
+
+
+Of those trends, I observe that for compounds with underpredicted solubilities, the number of h_bond_donors is higher, which leads me to think the model does not place proper importance on hydrogen bonding for aqueous solubility. For compounds with overpredicted solubilities, the molecular weight is higher, and there are more rotatable bonds, which leads me to believe the model is confused by large, flexible molecules. Perhaps these observations could provide clues as to future feature engineering possibilities.
+
+## Conclusion
+
+The random forest performs better than the linear model but still has deficiencies around molecular features causing over or under predicted solubilities.
