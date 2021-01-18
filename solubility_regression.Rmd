@@ -67,32 +67,32 @@ Before I dive into the machine learning model, let's examine exploratory plots t
 p1 <- ggplot(df, aes(x = mw)) +
   geom_histogram(bins = 10) +
   labs(title = "(a)") +
-  theme_classic()
+  theme_minimal()
 
 p2 <- ggplot(df, aes(x = psa)) +
   geom_histogram(bins = 10) +
   labs(title = "(b)") +
-  theme_classic()
+  theme_minimal()
 
 p3 <- ggplot(df, aes(x = solubility)) +
   geom_histogram(bins = 10) +
   labs(title = "(c)") +
-  theme_classic()
+  theme_minimal()
 
 p4 <- ggplot(df, aes(x = h_bond_donors)) +
   geom_bar() +
   labs(title = "(d)") +
-  theme_classic()
+  theme_minimal()
 
 p5 <- ggplot(df, aes(x = rings)) +
   geom_bar() +
   labs(title = "(e)") +
-  theme_classic()
+  theme_minimal()
 
 p6 <- ggplot(df, aes(x = rotatable_bonds)) +
   geom_bar() +
   labs(title = "(f)") +
-  theme_classic()
+  theme_minimal()
 
 grid.arrange(p1, p2, p3, p4, p5, p6, nrow = 3)
 ```
@@ -107,31 +107,31 @@ p1 <- ggplot(df, aes(x = psa, y = mw)) +
   geom_jitter(alpha = alpha) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(title = "(a)") +
-  theme_classic()
+  theme_minimal()
 
 p2 <- ggplot(df, aes(x = solubility, y = mw)) +
   geom_jitter(alpha = alpha) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(title = "(b)") +
-  theme_classic()
+  theme_minimal()
 
 p3 <- ggplot(df, aes(x = h_bond_donors, y = mw)) +
   geom_jitter(alpha = alpha, width = 0.1) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(title = "(c)") +
-  theme_classic()
+  theme_minimal()
 
 p4 <- ggplot(df, aes(x = rings, y = mw)) +
   geom_jitter(alpha = alpha, width = 0.1) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(title = "(d)") +
-  theme_classic()
+  theme_minimal()
 
 p5 <- ggplot(df, aes(x = rotatable_bonds, y = mw)) +
   geom_jitter(alpha = alpha, width = 0.1) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(title = "(e)") +
-  theme_classic()
+  theme_minimal()
 
 grid.arrange(p1, p2, p3, p4, p5, nrow = 3)
 ```
@@ -317,11 +317,13 @@ alpha <- 0.5
 
 linear_result_plot <- ggplot(lm_result$test_results, aes(x = prediction, y = solubility)) +
   geom_jitter(alpha = alpha, width = 0.1) +
-  labs(title = "(a) Linear")
+  labs(title = "(a) Linear") +
+  theme_minimal()
 
 rf_result_plot <- ggplot(rf_result$test_results, aes(x = prediction, y = solubility)) +
   geom_jitter(alpha = alpha, width = 0.1) +
-  labs(title = "(b) Random forest")
+  labs(title = "(b) Random forest") +
+  theme_minimal()
 
 grid.arrange(linear_result_plot, rf_result_plot, nrow = 1)
 ```
@@ -334,29 +336,32 @@ In Figure 3b, the random forest model trends slightly more reliable. The random 
 
 Since the random forest fared better, let's analyze what compounds make it fail. Are there any structural commonalities among the compounds that caused over or underpredictions? I will define underprediction as a residual > 1.0 and overprediction as a residual < 1.0. Remember that this is a log solubility scale, so these thresholds correspond to more than an order of magnitude difference in actual versus predicted solubility.
 
-``` {r}
-threshold <- 1.25
 
+Table 6 contains the mean values of molecular properties for the entire test compounds, the solubility-overpredicted compounds, and the solubility-underpredicted compounds. A caveat with these values is that h_bond_donors, rings, and rotatable_bonds must be integers greater than or equal to zero, so fractional values for these properties make no physical sense. However, fractional values can indicate trends in the data that are interesting.
+
+##### Table 6: Mean values of molecular properties
+
+``` {r}
 rf_overpredictions <- rf_result$test_results %>%
-  filter(residual < -1.25)
+  filter(residual < -1.0)
 
 rf_underpredictions <- rf_result$test_results %>%
-  filter(residual > 1.25)
+  filter(residual > 1.0)
 
 train_summary <- train %>%
-  select(!compound) %>%
+  select(!c("compound", "solubility")) %>%
   pivot_longer(everything(), names_to = "feature", values_to = "test_mean") %>%
   group_by(feature) %>%
   summarize_all(mean)
 
 rf_overpredictions_summary <- rf_overpredictions %>%
-  select(!c("compound", "residual", "prediction")) %>%
+  select(!c("compound", "residual", "prediction", "solubility")) %>%
   pivot_longer(everything(), names_to = "feature", values_to = "overpredicted_mean") %>%
   group_by(feature) %>%
   summarize_all(mean)
 
 rf_underpredictions_summary <- rf_underpredictions %>%
-  select(!c("compound", "residual", "prediction")) %>%
+  select(!c("compound", "residual", "prediction", "solubility")) %>%
   pivot_longer(everything(), names_to = "feature", values_to = "underpredicted_mean") %>%
   group_by(feature) %>%
   summarize_all(mean)
@@ -365,3 +370,6 @@ join_summaries <- train_summary %>%
   inner_join(rf_overpredictions_summary, by = "feature") %>%
   inner_join(rf_underpredictions_summary, by = "feature")
 ```
+
+
+Of those trends, I observe that for compounds with underpredicted solubilities, the number of h_bond_donors is higher, which leads me to think the model does not place proper importance on hydrogen bonding for aqueous solubility. For compounds with overpredicted solubilities, the molecular weight is higher, and there are more rotatable bonds, which leads me to believe the model is confused by large, flexible molecules. Perhaps these observations could provide clues as to future feature engineering possibilities.
