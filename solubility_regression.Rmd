@@ -335,9 +335,33 @@ In Figure 3b, the random forest model trends slightly more reliable. The random 
 Since the random forest fared better, let's analyze what compounds make it fail. Are there any structural commonalities among the compounds that caused over or underpredictions? I will define underprediction as a residual > 1.0 and overprediction as a residual < 1.0. Remember that this is a log solubility scale, so these thresholds correspond to more than an order of magnitude difference in actual versus predicted solubility.
 
 ``` {r}
+threshold <- 1.25
+
 rf_overpredictions <- rf_result$test_results %>%
-  filter(residual < -1.0)
+  filter(residual < -1.25)
 
 rf_underpredictions <- rf_result$test_results %>%
-  filter(residual > 1.0)
+  filter(residual > 1.25)
+
+train_summary <- train %>%
+  select(!compound) %>%
+  pivot_longer(everything(), names_to = "feature", values_to = "test_mean") %>%
+  group_by(feature) %>%
+  summarize_all(mean)
+
+rf_overpredictions_summary <- rf_overpredictions %>%
+  select(!c("compound", "residual", "prediction")) %>%
+  pivot_longer(everything(), names_to = "feature", values_to = "overpredicted_mean") %>%
+  group_by(feature) %>%
+  summarize_all(mean)
+
+rf_underpredictions_summary <- rf_underpredictions %>%
+  select(!c("compound", "residual", "prediction")) %>%
+  pivot_longer(everything(), names_to = "feature", values_to = "underpredicted_mean") %>%
+  group_by(feature) %>%
+  summarize_all(mean)
+
+join_summaries <- train_summary %>%
+  inner_join(rf_overpredictions_summary, by = "feature") %>%
+  inner_join(rf_underpredictions_summary, by = "feature")
 ```
