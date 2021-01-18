@@ -7,7 +7,7 @@ tags: ["chemistry", "r"]
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.align = "center")
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.align = "center")
 library(readr)
 library(dplyr)
 library(ggplot2)
@@ -332,7 +332,7 @@ In Figure 3a, the linear model fit is lacking in the area of high predicted solu
 
 In Figure 3b, the random forest model trends slightly more reliable. The random forest predicts high solubilities where there are actual high solubilities. Near the low end of the actual solubilities, there are numerous under and over predictions from the random forest.
 
-## Random dforest failure analysis
+## Random forest failure analysis
 
 Since the random forest fared better, let's analyze what compounds make it fail. Are there any structural commonalities among the compounds that caused over or underpredictions? I will define underprediction as a residual > 1.0 and overprediction as a residual < 1.0. Remember that this is a log solubility scale, so these thresholds correspond to more than an order of magnitude difference in actual versus predicted solubility.
 
@@ -375,3 +375,7 @@ knitr::kable(join_summaries)
 
 
 Of those trends, I observe that for compounds with underpredicted solubilities, the number of h_bond_donors is higher, which leads me to think the model does not place proper importance on hydrogen bonding for aqueous solubility. For compounds with overpredicted solubilities, the molecular weight is higher, and there are more rotatable bonds, which leads me to believe the model is confused by large, flexible molecules. Perhaps these observations could provide clues as to future feature engineering possibilities.
+
+## Conclusion
+
+The random forest performs better than the linear model but still has deficiencies around molecular features causing over or under predicted solubilities.
