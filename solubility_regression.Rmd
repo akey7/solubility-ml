@@ -369,6 +369,8 @@ rf_underpredictions_summary <- rf_underpredictions %>%
 join_summaries <- train_summary %>%
   inner_join(rf_overpredictions_summary, by = "feature") %>%
   inner_join(rf_underpredictions_summary, by = "feature")
+
+knitr::kable(join_summaries)
 ```
 
 
