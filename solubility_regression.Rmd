@@ -7,7 +7,7 @@ tags: ["chemistry", "r"]
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.align = "center")
 library(readr)
 library(dplyr)
 library(ggplot2)
@@ -47,7 +47,7 @@ The original report published a dataset of compounds represented as SMILES strin
 
 ## Exploratory visualization
 
-``` {r include = FALSE}
+``` {r}
 df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
   select(
     compound = Compound.ID, 
@@ -62,7 +62,7 @@ df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
 
 Before I dive into the machine learning model, let's examine exploratory plots to get a feel for the data distribution. Figure 1 has histograms (for continuous variables) and bar plots (for discrete variables) to demonstrate the dataset's values' distributions. Figure 1a, 1b, 1d, 1e, and 1f show distributions of values favoring their respective range's low ends. Solubility, our response variable, has a broader spread above and below its mean of -3.05.
 
-``` {r, fig.height = 7, fig.width = 7, fig.align = "center", echo = FALSE, fig.cap = "Histograms and bar plots of variables"}
+``` {r, fig.height = 7, fig.width = 7, fig.cap = "Histograms and bar plots of variables"}
 p1 <- ggplot(df, aes(x = mw)) +
   geom_histogram(bins = 10) +
   labs(title = "(a)") +
@@ -100,7 +100,7 @@ Figure 1a, 1b, 1d, 1e, and 1f show distributions of values favoring their respec
 
 A number of the features of the molecules require lots of atoms. For example, a five-ring molecule will likely have a higher molecular weight than a three-ring molecule. Molecular weight has a special relationship with all other variables that denote each molecule's increasing structural complexity. Figure 2 plots molecular weight against all other variables, with a trend line for each relationship, as shown below.
 
-``` {r, fig.height = 7, fig.width = 7, fig.align = "center", echo = FALSE, message = FALSE, warnings = FALSE, fig.cap = "Relationship of molecular weight to other variables"}
+``` {r, fig.height = 7, fig.width = 7, fig.cap = "Relationship of molecular weight to other variables"}
 alpha = 0.1
 p1 <- ggplot(df, aes(x = psa, y = mw)) +
   geom_jitter(alpha = alpha) +
@@ -141,7 +141,7 @@ Figures 2a, 2c, 2d, 2e all exhibit increasing molecular weight with increased st
 
 All models use the same randomized train/test split. First, I shuffled the rows of the original dataset. Then, I selected the first 846 rows for the training set and the last 282 rows for the test dataset. I seeded the random number generator with a constant to ensure the same shuffles between model runs.
 
-``` {r, include = FALSE}
+``` {r}
 solubilityTrainTestSplit <- function(all_data, split_fraction = 0.75, random_seed = 13) {
   # Shuffle based on random seed
   set.seed(random_seed)
@@ -196,7 +196,7 @@ Our first stop is the linear model. Table 3 shows the performance of the linear 
 
 ##### Table 3: linear model performance on test data
 
-``` {r, echo = FALSE}
+``` {r}
 analyzeSolubilityLinearModel <- function(model, test_data) {
   # Run the prediction
   predicted_solbilities <- predict(model, test_data)
@@ -244,7 +244,7 @@ The second model is the random forest model. For the random forest, [I use the r
 
 ##### Table 4: Random forest test data performance
 
-``` {r, echo = FALSE}
+``` {r}
 analyzeSolubilityRandomForestModel <- function(model, test_data) {
   # Run the prediction
   predicted_solbilities <- predict(model, test_data)$predictions
@@ -297,7 +297,7 @@ Table 5 shows the performance metrics of the linear and random forest models.
 
 ##### Table 5
 
-``` {r, echo = FALSE}
+``` {r}
 model_comparison_df <- tibble(
   model = c("Linear", "Random forest"),
   rmse = c(lm_result$rmse, rf_result$rmse),
@@ -311,7 +311,7 @@ Examining Table 5 shows reveals two comparisons between the models that are imme
 
 Figure 3, which plots actual versus predicted solubilities, is my favorite comparison between the linear and random forest models. Recall that all solubilities are log solubilities, hence the negative values on the axes.
 
-``` {r, fig.height = 7, fig.width = 7, fig.align = "center", echo = FALSE, message = FALSE, warnings = FALSE, fig.cap = "actual vs. predicted values for both models"}
+``` {r, fig.height = 7, fig.width = 7, fig.align = "center", fig.cap = "actual vs. predicted values for both models"}
 alpha <- 0.5
 
 linear_result_plot <- ggplot(lm_result$test_results, aes(x = prediction, y = solubility)) +
