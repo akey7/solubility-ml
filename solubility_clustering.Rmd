@@ -29,6 +29,10 @@ df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
 knitr::kable(head(df))
 ```
 
+## Dataset description
+
+See the previous post for a description of the dataset and variables I use in this study.
+
 ## Review of prior figures
 
 Below are the plots of solubility versus other variables I want to explore with clustering. The plots have jittered points to prevent overplotting. 
@@ -107,3 +111,29 @@ grid.arrange(p1, p2, p3, p4, p5, nrow = 3)
 ```
 
 Each variable has a different trend of its effect on solubility, as shown above. Plots (b) (of polar surface area) and (c) (of h-bond donors) show increasing trends of solubility. Plots (a) (molecular weight), (d) (rings), and (e) (rotatable bonds) show decreasing trends in solubility.
+
+## Solubility versus molecular weight
+
+```{r}
+solubility_vs_mw <- df %>%
+  select(solubility, mw) %>%
+  as.matrix() %>%
+  scale()
+
+solubility_vs_ml_dist <- dist(solubility_vs_mw)
+solubility_vs_ml_hclust <- hclust(solubility_vs_ml_dist, method = "complete")
+plot(solubility_vs_ml_hclust)
+```
+
+```{r}
+alpha <- 0.25
+solubility_vs_ml_cluster <- as.factor(cutree(solubility_vs_ml_hclust, k = 4))
+df %>%
+  transmute(
+    solubility,
+    mw,
+    cluster = solubility_vs_ml_cluster
+  ) %>%
+  ggplot(aes(x = mw, y = solubility, col = cluster)) +
+    geom_jitter(alpha = alpha)
+```
