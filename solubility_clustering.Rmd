@@ -13,7 +13,7 @@ library(readr)
 library(gridExtra)
 ```
 
-
+In my prior aqueous solubility regression study, I did an exploratory data visualization and found intriguing plots of solubility versus other variables in the study. I didn't perform any experimental modeling of those relationships in that study. Here, I followup by performing a cluster analysis of solubility relationships to help future regression modeling efforts. My question is: do clusters within each of these relationships explain each feature's effect on solubility?
 
 ``` {r}
 df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
@@ -29,7 +29,9 @@ df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
 knitr::kable(head(df))
 ```
 
-Histograms and bar plots of each of the variables.
+## Review of prior figures
+
+Below are the plots of solubility versus other variables I want to explore with clustering. The plots have jittered points to prevent overplotting. 
 
 ``` {r, fig.height = 7, fig.width = 7, fig.cap = "Histograms and bar plots of variables"}
 p1 <- ggplot(df, aes(x = mw)) +
@@ -65,35 +67,37 @@ p6 <- ggplot(df, aes(x = rotatable_bonds)) +
 grid.arrange(p1, p2, p3, p4, p5, p6, nrow = 3)
 ```
 
-And now the relationships we are concerned with:
+As shown above, the subplots (a), (b), (d), (e), and (f) show distributions that favor the low end of the distribution. This low-end favorability is essential when extracting relationships for values greater in these distributions. For example, data about what happens to solubility with large ring counts are relatively sparse.
+
+Below are the plots of solubility versus other variables I will explore with clustering. The plots have jittered points to prevent overplotting.
 
 ``` {r, fig.height = 7, fig.width = 7, fig.cap = "Relationship of molecular weight to other variables"}
 alpha = 0.1
-p1 <- ggplot(df, aes(x = psa, y = mw)) +
-  geom_jitter(alpha = alpha) +
+p1 <- ggplot(df, aes(x = mw, y = solubility)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(title = "(a)") +
   theme_minimal()
 
-p2 <- ggplot(df, aes(x = solubility, y = mw)) +
+p2 <- ggplot(df, aes(x = psa, y = solubility)) +
   geom_jitter(alpha = alpha) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(title = "(b)") +
   theme_minimal()
 
-p3 <- ggplot(df, aes(x = h_bond_donors, y = mw)) +
+p3 <- ggplot(df, aes(x = h_bond_donors, y = solubility)) +
   geom_jitter(alpha = alpha, width = 0.1) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(title = "(c)") +
   theme_minimal()
 
-p4 <- ggplot(df, aes(x = rings, y = mw)) +
+p4 <- ggplot(df, aes(x = rings, y = solubility)) +
   geom_jitter(alpha = alpha, width = 0.1) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(title = "(d)") +
   theme_minimal()
 
-p5 <- ggplot(df, aes(x = rotatable_bonds, y = mw)) +
+p5 <- ggplot(df, aes(x = rotatable_bonds, y = solubility)) +
   geom_jitter(alpha = alpha, width = 0.1) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(title = "(e)") +
