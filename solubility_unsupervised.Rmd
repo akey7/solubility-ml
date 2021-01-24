@@ -11,6 +11,7 @@ library(ggplot2)
 library(readr)
 library(dplyr)
 library(tidyr)
+library(gridExtra)
 ```
 
 ## Load the data set
@@ -47,22 +48,36 @@ summary(compound_pca)
 
 ## Create the plots to explore the PCA
 
-Ucomment the biplot if you want to see it (it takes non-trivial computation time)
+First the biplot
 
 ``` {r}
-# biplot(compound_pca)
+biplot(compound_pca)
+```
 
-# Scree plot
-compound_pca_var <- compound_pca$sdev ^ 2
-compound_pca_pve <- compound_pca_var / sum(compound_pca_var)  # Proportion variance explained
+Now the scree plots
 
-# Plot variance explained for each principal component
-plot(compound_pca_pve, xlab = "Principal Component",
-     ylab = "Proportion of Variance Explained",
-     ylim = c(0, 1), type = "b")
+``` {r, fig.caption = "}
+pca_pve_df <- tibble(
+  principal_component = 1:length(compound_pca_pve),
+  proportion_variance_explained = compound_pca_pve,
+  cumulative_variance_explained = cumsum(compound_pca_pve)
+)
 
-# Plot cumulative proportion of variance explained
-plot(cumsum(compound_pca_pve), xlab = "Principal Component",
-     ylab = "Cumulative Proportion of Variance Explained",
-     ylim = c(0, 1), type = "b")
+p1 <- ggplot(pca_pve_df, aes(x = principal_component, y = proportion_variance_explained)) +
+  geom_line() +
+  geom_point(shape = 19, size = 3) +
+  ylim(c(0, 1)) +
+  labs(x = "principal component",
+       y = "proportion of variance explained") +
+  theme_minimal()
+
+p2 <- ggplot(pca_pve_df, aes(x = principal_component, y = cumulative_variance_explained)) +
+  geom_line() +
+  geom_point(shape = 19, size = 3) +
+  ylim(c(0, 1)) +
+  labs(x = "principal component",
+       y = "cumulative proportion of variance explained") +
+  theme_minimal()
+
+grid.arrange(p1, p2, nrow = 1)
 ```
