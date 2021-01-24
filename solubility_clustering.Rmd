@@ -276,5 +276,5 @@ grid.arrange(cluster_2, cluster_3, cluster_4, nrow = 2)
 
 ## Conclusion
 
-Each variable in the dataset needs a different number of clusters to adequately specify its relastionship to solubility
+When I use hierarchiical clustering to group solubilities, each variable in the dataset needs a different number of clusters to adequately specify its relastionship to solubility.
 
