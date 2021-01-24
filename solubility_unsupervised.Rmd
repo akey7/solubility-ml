@@ -112,14 +112,28 @@ ggplot(mw_solubility_clusters, aes(x = mw, y = solubility, col = hierarchical_cl
 Use the first principal component. From the biplot above, the first principle component reflects molecular weight, polar surface area, and h bond donors. From looking at the distribution of polarity around a molecule, and how that affects its solubility with water, this makes intuitive sense. From the scree plot above, the first principal component accounts for 75% of the variability in the data, which matches my chemical intuition.
 
 ``` {r}
-pc1_compounds <- df %>%
-  select(compound, solubility) %>%
-  mutate(pc1 = compound_pca$x[, 1])
+pc1_solubility_matrix <- df %>%
+  select(solubility) %>%
+  mutate(pc1 = compound_pca$x[, 1]) %>%
+  as.matrix() %>%
+  scale()
+pc1_solubility_dist <- dist(pc1_solubility_matrix)
+pc1_solubility_hclust <- hclust(pc1_solubility_dist, method = "complete")
+plot(pc1_solubility_hclust)
+```
 
-ggplot(pc1_compounds, aes(x = pc1, y = solubility)) +
-  geom_point(alpha = 0.25) +
-  geom_smooth(method = "lm") +
-  theme_minimal()
+Now plot the clusters within a plot of solubility versus pc1
 
-cor(pc1_compounds$solubility, pc1_compounds$pc1)
+``` {r}
+pc1_hierarchical_cluster <- as.factor(cutree(pc1_solubility_hclust, h = 4))
+pc1_solubility_clusters <- df %>%
+  transmute(
+    solubility,
+    compound,
+    pc1 = compound_pca$x[, 1],
+    pc1_hierarchical_cluster = pc1_hierarchical_cluster
+  )
+
+ggplot(pc1_solubility_clusters, aes(x = pc1, y = solubility, col = pc1_hierarchical_cluster)) +
+  geom_point(alpha = 0.25)
 ```
