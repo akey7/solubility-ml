@@ -58,6 +58,9 @@ biplot(compound_pca)
 #### Scree plots
 
 ``` {r, fig.caption = "}
+compound_pca_var <- compound_pca$sdev ^ 2
+compound_pca_pve <- compound_pca_var/ sum(compound_pca_var)
+
 pca_pve_df <- tibble(
   principal_component = 1:length(compound_pca_pve),
   proportion_variance_explained = compound_pca_pve,
