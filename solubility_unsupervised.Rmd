@@ -12,6 +12,7 @@ library(readr)
 library(dplyr)
 library(tidyr)
 library(gridExtra)
+library(ranger)
 ```
 
 ## Load the data set
@@ -135,5 +136,34 @@ pc1_solubility_clusters <- df %>%
   )
 
 ggplot(pc1_solubility_clusters, aes(x = pc1, y = solubility, col = pc1_hierarchical_cluster)) +
-  geom_point(alpha = 0.25)
+  geom_point(alpha = 0.25) +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+Now let's try both pc1 and pc2, and make a hierarchical cluster between them
+
+``` {r}
+pc1_pc2_matrix <- tibble(pc1 = compound_pca$x[, 1], pc2 = compound_pca$x[, 2]) %>%
+  as.matrix() %>%
+  scale()
+pc1_pc2_dist <- dist(pc1_pc2_matrix)
+pc1_pc2_hclust <- hclust(pc1_pc2_dist, method = "complete")
+plot(pc1_solubility_hclust)
+```
+
+Now plot these clusters
+
+``` {r}
+pc1_pc2_cluster <- as.factor(cutree(pc1_pc2_hclust, k = 4))
+pc1_pc2_clusters <- df %>%
+  transmute(
+    solubility,
+    compound,
+    pc1 = compound_pca$x[, 1],
+    pc2 = compound_pca$x[, 2],
+    pc1_pc2_cluster = pc1_pc2_cluster
+  )
+
+pc1_pc2_cluster_mod <- lm(solubility ~ pc1 + pc2 + pc1_pc2_cluster, pc1_pc2_clusters)
+summary(pc1_pc2_cluster_mod)
 ```
