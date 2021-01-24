@@ -106,4 +106,4 @@ p5 <- ggplot(df, aes(x = rotatable_bonds, y = solubility)) +
 grid.arrange(p1, p2, p3, p4, p5, nrow = 3)
 ```
 
-
+Each variable has a different trend of its effect on solubility, as shown above. Plots (b) (of polar surface area) and (c) (of h-bond donors) show increasing trends of solubility. Plots (a) (molecular weight), (d) (rings), and (e) (rotatable bonds) show decreasing trends in solubility.
