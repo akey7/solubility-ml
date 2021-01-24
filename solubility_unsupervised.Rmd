@@ -46,15 +46,15 @@ compound_pca <- prcomp(compound_matrix, scale. = TRUE, center = TRUE)
 summary(compound_pca)
 ```
 
-## Create the plots to explore the PCA
+### Create the plots to explore the PCA
 
-First the biplot
+#### biplot
 
 ``` {r}
 biplot(compound_pca)
 ```
 
-Now the scree plots
+#### Scree plots
 
 ``` {r, fig.caption = "}
 pca_pve_df <- tibble(
@@ -80,4 +80,46 @@ p2 <- ggplot(pca_pve_df, aes(x = principal_component, y = cumulative_variance_ex
   theme_minimal()
 
 grid.arrange(p1, p2, nrow = 1)
+```
+
+## Hierarchical clustering, based on just molecular weight and solubility
+
+First, run the hierarchical clustering
+
+``` {r}
+mw_solubility_matrix <- df %>%
+  select(mw, solubility) %>%
+  as.matrix() %>%
+  scale()
+mw_solubility_dist <- dist(mw_solubility_matrix)
+mw_solubility_hclust <- hclust(mw_solubility_dist, method = "complete")
+plot(mw_solubility_hclust)
+```
+
+Now cut a tree for 4 clusters and plot them in a scatter plot coded for their group. Cluster 1 appears to be compounds with high mw and moderate solubility, cluster 2 appears to be compounds with moderate molecular weight and moderate solubility, cluster 3 appeard to be high molecular weight and low solubility, and cluster 4 is low molecular weight and high solubility.
+
+``` {r}
+hierarchical_cluster <- as.factor(cutree(mw_solubility_hclust, k = 4))
+mw_solubility_clusters <- cbind(df, hierarchical_cluster)
+
+ggplot(mw_solubility_clusters, aes(x = mw, y = solubility, col = hierarchical_cluster)) +
+  geom_point(alpha = 0.25) +
+  theme_minimal()
+```
+
+## Hierarchical clustering with PCA
+
+Use the first principal component. From the biplot above, the first principle component reflects molecular weight, polar surface area, and h bond donors. From looking at the distribution of polarity around a molecule, and how that affects its solubility with water, this makes intuitive sense. From the scree plot above, the first principal component accounts for 75% of the variability in the data, which matches my chemical intuition.
+
+``` {r}
+pc1_compounds <- df %>%
+  select(compound, solubility) %>%
+  mutate(pc1 = compound_pca$x[, 1])
+
+ggplot(pc1_compounds, aes(x = pc1, y = solubility)) +
+  geom_point(alpha = 0.25) +
+  geom_smooth(method = "lm") +
+  theme_minimal()
+
+cor(pc1_compounds$solubility, pc1_compounds$pc1)
 ```
