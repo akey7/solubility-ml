@@ -1,0 +1,105 @@
+---
+title: "solubility_clustering"
+author: "Alicia Key"
+date: "1/24/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(gridExtra)
+```
+
+
+
+``` {r}
+df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
+  select(
+    compound = Compound.ID, 
+    mw = Molecular.Weight, 
+    h_bond_donors = Number.of.H.Bond.Donors, 
+    rings = Number.of.Rings, 
+    rotatable_bonds = Number.of.Rotatable.Bonds, 
+    psa = Polar.Surface.Area, 
+    solubility = measured.log.solubility.in.mols.per.litre
+)
+knitr::kable(head(df))
+```
+
+Histograms and bar plots of each of the variables.
+
+``` {r, fig.height = 7, fig.width = 7, fig.cap = "Histograms and bar plots of variables"}
+p1 <- ggplot(df, aes(x = mw)) +
+  geom_histogram(bins = 10) +
+  labs(title = "(a)") +
+  theme_minimal()
+
+p2 <- ggplot(df, aes(x = psa)) +
+  geom_histogram(bins = 10) +
+  labs(title = "(b)") +
+  theme_minimal()
+
+p3 <- ggplot(df, aes(x = solubility)) +
+  geom_histogram(bins = 10) +
+  labs(title = "(c)") +
+  theme_minimal()
+
+p4 <- ggplot(df, aes(x = h_bond_donors)) +
+  geom_bar() +
+  labs(title = "(d)") +
+  theme_minimal()
+
+p5 <- ggplot(df, aes(x = rings)) +
+  geom_bar() +
+  labs(title = "(e)") +
+  theme_minimal()
+
+p6 <- ggplot(df, aes(x = rotatable_bonds)) +
+  geom_bar() +
+  labs(title = "(f)") +
+  theme_minimal()
+
+grid.arrange(p1, p2, p3, p4, p5, p6, nrow = 3)
+```
+
+And now the relationships we are concerned with:
+
+``` {r, fig.height = 7, fig.width = 7, fig.cap = "Relationship of molecular weight to other variables"}
+alpha = 0.1
+p1 <- ggplot(df, aes(x = psa, y = mw)) +
+  geom_jitter(alpha = alpha) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(a)") +
+  theme_minimal()
+
+p2 <- ggplot(df, aes(x = solubility, y = mw)) +
+  geom_jitter(alpha = alpha) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(b)") +
+  theme_minimal()
+
+p3 <- ggplot(df, aes(x = h_bond_donors, y = mw)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(c)") +
+  theme_minimal()
+
+p4 <- ggplot(df, aes(x = rings, y = mw)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(d)") +
+  theme_minimal()
+
+p5 <- ggplot(df, aes(x = rotatable_bonds, y = mw)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(e)") +
+  theme_minimal()
+
+grid.arrange(p1, p2, p3, p4, p5, nrow = 3)
+```
+
+
