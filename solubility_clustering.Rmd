@@ -141,14 +141,17 @@ mw_cluster_df <- hierarchical_clusters(select(df, solubility, mw))
 
 cluster_2 <- ggplot(mw_cluster_df, aes(x = mw, y = solubility, col = cluster_2)) +
   geom_point(alpha = alpha) +
+  labs(title = "(a)") +
   theme_minimal()
 
 cluster_3 <- ggplot(mw_cluster_df, aes(x = mw, y = solubility, col = cluster_3)) +
   geom_point(alpha = alpha) +
+  labs(title = "(b)") +
   theme_minimal()
 
 cluster_4 <- ggplot(mw_cluster_df, aes(x = mw, y = solubility, col = cluster_4)) +
   geom_point(alpha = alpha) +
+  labs(title = "(c)") +
   theme_minimal()
 
 grid.arrange(cluster_2, cluster_3, cluster_4, nrow = 3)
@@ -161,15 +164,88 @@ psa_cluster_df <- hierarchical_clusters(select(df, solubility, psa))
 
 cluster_2 <- ggplot(psa_cluster_df, aes(x = psa, y = solubility, col = cluster_2)) +
   geom_point(alpha = alpha) +
+  labs(title = "(a)") +
   theme_minimal()
 
 cluster_3 <- ggplot(psa_cluster_df, aes(x = psa, y = solubility, col = cluster_3)) +
   geom_point(alpha = alpha) +
+  labs(title = "(b)") +
   theme_minimal()
 
 cluster_4 <- ggplot(psa_cluster_df, aes(x = psa, y = solubility, col = cluster_4)) +
   geom_point(alpha = alpha) +
+  labs(title = "(c)") +
   theme_minimal()
 
 grid.arrange(cluster_2, cluster_3, cluster_4, nrow = 3)
 ```
+
+## Solubility versus h-bond donors
+
+```{r fig.height = 7, fig.width = 7}
+h_bond_donor_cluster_df <- hierarchical_clusters(select(df, solubility, h_bond_donors))
+
+cluster_2 <- ggplot(h_bond_donor_cluster_df, aes(x = h_bond_donors, y = solubility, col = cluster_2)) +
+  geom_point(alpha = alpha) +
+  labs(title = "(a)") +
+  theme_minimal()
+
+cluster_3 <- ggplot(h_bond_donor_cluster_df, aes(x = h_bond_donors, y = solubility, col = cluster_3)) +
+  geom_point(alpha = alpha) +
+  labs(title = "(b)") +
+  theme_minimal()
+
+cluster_4 <- ggplot(h_bond_donor_cluster_df, aes(x = h_bond_donors, y = solubility, col = cluster_4)) +
+  geom_point(alpha = alpha) +
+  labs(title = "(c)") +
+  theme_minimal()
+
+grid.arrange(cluster_2, cluster_3, cluster_4, nrow = 3)
+```
+
+## Solubility versus rings
+
+```{r fig.height = 7, fig.width = 7}
+rings_cluster_df <- hierarchical_clusters(select(df, solubility, rings))
+
+cluster_2 <- ggplot(rings_cluster_df, aes(x = rings, y = solubility, col = cluster_2)) +
+  geom_point(alpha = alpha) +
+  labs(title = "(a)") +
+  theme_minimal()
+
+cluster_3 <- ggplot(rings_cluster_df, aes(x = rings, y = solubility, col = cluster_3)) +
+  geom_point(alpha = alpha) +
+  labs(title = "(b)") +
+  theme_minimal()
+
+cluster_4 <- ggplot(rings_cluster_df, aes(x = rings, y = solubility, col = cluster_4)) +
+  geom_point(alpha = alpha) +
+  labs(title = "(c)") +
+  theme_minimal()
+
+grid.arrange(cluster_2, cluster_3, cluster_4, nrow = 3)
+```
+
+## Solubility versus rotatable_bonds
+
+```{r fig.height = 7, fig.width = 7}
+rotatable_bonds_cluster_df <- hierarchical_clusters(select(df, solubility, rotatable_bonds))
+
+cluster_2 <- ggplot(rotatable_bonds_cluster_df, aes(x = rotatable_bonds, y = solubility, col = cluster_2)) +
+  geom_point(alpha = alpha) +
+  labs(title = "(a)") +
+  theme_minimal()
+
+cluster_3 <- ggplot(rotatable_bonds_cluster_df, aes(x = rotatable_bonds, y = solubility, col = cluster_3)) +
+  geom_point(alpha = alpha) +
+  labs(title = "(b)") +
+  theme_minimal()
+
+cluster_4 <- ggplot(rotatable_bonds_cluster_df, aes(x = rotatable_bonds, y = solubility, col = cluster_4)) +
+  geom_point(alpha = alpha) +
+  labs(title = "(c)") +
+  theme_minimal()
+
+grid.arrange(cluster_2, cluster_3, cluster_4, nrow = 3)
+```
+
