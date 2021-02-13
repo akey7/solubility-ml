@@ -12,37 +12,6 @@ library(usemodels)
 library(gridExtra)
 theme_set(theme_classic())
 ```
-
-Aqueous solubility (ability to dissolve in water) is an essential property of a chemical compound important in the laboratory. Can the solubility of a compound be predicted based on a chemical structure alone? John Delaney posed this predictions question in 2004 [(Delaney 2004)](https://pubs.acs.org/doi/10.1021/ci034243x) and wrote a paper with numerous citations in the chemistry literature. This study will take a dataset similar to that study and use linear and random forest regression to predict the compounds' solubilities. *The random forest model is a much better predictor of solubilities*.
-
-A number of compounds in this dataset are well-known, even outside the chemistry community. Here is a sample of what lies inside the dataset:
-
-##### Table 1: Well-known compounds in the dataset
-| Compound name | Description |
-|---|---|
-[Sucrose](https://en.wikipedia.org/wiki/Sugar) | Sugar
-[Erythritol](https://en.wikipedia.org/wiki/Erythritol) | Sugar substitute
-[Caffiene](https://en.wikipedia.org/wiki/Caffeine) | Coffee time!
-[Fructose](https://en.wikipedia.org/wiki/Fructose) | Component of high fructose corn syrup
-
-##  Dataset Description
-
-The original report published a dataset of compounds represented as SMILES strings. SMILES strings are a compact and text-based method of specifying chemical structures. This study will use a preprocessed dataset from deepchem.io, which contains features parsed from these SMILES strings. [You can browse the file on GitHub.](https://github.com/deepchem/deepchem/blob/master/datasets/delaney-processed.csv)This study uses a subset of these preprocessed features, which are listed in Table 2. 
-
-##### Table 2: Features of each compound used in the regression 
-
-| Feature name | Units | Description
-|---|---|---|
-`mw` | g/mol | The molecular weight of the compound.
-`solubility` | log(mol/L) | The log solubility, in mol/L. Solubility is the response variable of this study.
-`psa` | Å<sup>2</sup> | The polar surface area of a molecule.
-`h_bond_donors` | unitless | The number of hydrogen bond donors on a molecule.<sup>1</sup>
-`rotatable_bonds` | unitless | The number of rotatable bonds within a molecule.<sup>2</sup>
-
-## Complete source code
-
-To make this blog post easier to read, I have omitted the source code. However, [you can read the source code in it entirety on GitHub.](https://github.com/akey7/solubility-ml/blob/v0.0.2/solubility_regression.Rmd)
-
 ## Exploratory visualization
 
 ``` {r include = FALSE}
