@@ -1,0 +1,134 @@
+---
+title: "solubility_tuned_random_forest.Rmd"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidymodels)
+library(ranger)
+library(usemodels)
+library(gridExtra)
+library(vip)
+theme_set(theme_classic())
+```
+## Exploratory visualization
+
+``` {r}
+df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
+  select(
+    compound = Compound.ID, 
+    mw = Molecular.Weight, 
+    h_bond_donors = Number.of.H.Bond.Donors, 
+    rings = Number.of.Rings, 
+    rotatable_bonds = Number.of.Rotatable.Bonds, 
+    psa = Polar.Surface.Area, 
+    solubility = measured.log.solubility.in.mols.per.litre
+)
+```
+
+## Split and bootstrap sample the data
+
+```{r}
+split <- initial_split(df)
+train_data <- training(split)
+test_data <- testing(split)
+train_boot <- bootstraps(train_data, times = 5)
+```
+
+## Get a suggestion on how to use xgboost
+
+```{r}
+usemodels::use_xgboost(solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa, data = train_data)
+```
+
+## Implement most of suggestions
+
+### First make the recipe
+
+Unite the data, formula, and preprocessing steps.
+
+```{r}
+xgboost_recipe <- 
+  recipe(formula = solubility ~ mw + h_bond_donors + rings + rotatable_bonds + 
+    psa, data = train_data) %>% 
+  step_zv(all_predictors()) 
+```
+
+### Then make the spec
+
+Specify the boost tree, what needs to be tuned, the mode, and the engine.
+
+```{r}
+xgboost_spec <- 
+  boost_tree(trees = tune(), min_n = tune(), tree_depth = tune(), learn_rate = tune(), 
+    loss_reduction = tune(), sample_size = tune()) %>% 
+  set_mode("regression") %>% 
+  set_engine("xgboost") 
+```
+
+### Then make the workflow
+
+Link the recipe and the spec together.
+
+```{r}
+xgboost_workflow <- 
+  workflow() %>% 
+  add_recipe(xgboost_recipe) %>% 
+  add_model(xgboost_spec) 
+```
+
+### Then tune the tree
+
+```{r}
+set.seed(14228)
+doParallel::registerDoParallel()
+
+xgboost_tune <-
+  tune_grid(xgboost_workflow, resamples = train_boot, grid = 200)
+```
+
+## Evaluate the model
+
+### Collect some metrics, evaluate the model
+
+```{r}
+autoplot(xgboost_tune) +
+  theme_gray()
+```
+
+### Finalize the workflow on the xgboost model
+
+```{r}
+final_xgb <- xgboost_workflow %>%
+  finalize_workflow(select_best(xgboost_tune, metric = "rmse"))
+```
+
+## Predictions and predictor importance
+
+```{r}
+solubilty_fit <- last_fit(final_xgb, split)
+collect_metrics(solubilty_fit)
+```
+
+```{r}
+collect_predictions(solubilty_fit) %>%
+  ggplot(aes(.pred, solubility)) +
+  geom_point(alpha = 0.4) +
+  stat_smooth(method = "lm", se = FALSE)
+```
+
+### Variable importance
+
+```{r}
+final_xgb %>%
+  fit(data = train_data) %>%
+  pull_workflow_fit() %>%
+  vip(geom = "point")
+```
+
+## Result
+
+The final XGBoost RMSE = 0.774, R^2 = 0.872. This beats the tuned random forest RMSE = 0.840, R^2 = 0.828. The XGBoost is the clear winner.
+

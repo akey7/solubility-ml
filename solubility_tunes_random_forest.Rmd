@@ -12,37 +12,6 @@ library(usemodels)
 library(gridExtra)
 theme_set(theme_classic())
 ```
-
-Aqueous solubility (ability to dissolve in water) is an essential property of a chemical compound important in the laboratory. Can the solubility of a compound be predicted based on a chemical structure alone? John Delaney posed this predictions question in 2004 [(Delaney 2004)](https://pubs.acs.org/doi/10.1021/ci034243x) and wrote a paper with numerous citations in the chemistry literature. This study will take a dataset similar to that study and use linear and random forest regression to predict the compounds' solubilities. *The random forest model is a much better predictor of solubilities*.
-
-A number of compounds in this dataset are well-known, even outside the chemistry community. Here is a sample of what lies inside the dataset:
-
-##### Table 1: Well-known compounds in the dataset
-| Compound name | Description |
-|---|---|
-[Sucrose](https://en.wikipedia.org/wiki/Sugar) | Sugar
-[Erythritol](https://en.wikipedia.org/wiki/Erythritol) | Sugar substitute
-[Caffiene](https://en.wikipedia.org/wiki/Caffeine) | Coffee time!
-[Fructose](https://en.wikipedia.org/wiki/Fructose) | Component of high fructose corn syrup
-
-##  Dataset Description
-
-The original report published a dataset of compounds represented as SMILES strings. SMILES strings are a compact and text-based method of specifying chemical structures. This study will use a preprocessed dataset from deepchem.io, which contains features parsed from these SMILES strings. [You can browse the file on GitHub.](https://github.com/deepchem/deepchem/blob/master/datasets/delaney-processed.csv)This study uses a subset of these preprocessed features, which are listed in Table 2. 
-
-##### Table 2: Features of each compound used in the regression 
-
-| Feature name | Units | Description
-|---|---|---|
-`mw` | g/mol | The molecular weight of the compound.
-`solubility` | log(mol/L) | The log solubility, in mol/L. Solubility is the response variable of this study.
-`psa` | Å<sup>2</sup> | The polar surface area of a molecule.
-`h_bond_donors` | unitless | The number of hydrogen bond donors on a molecule.<sup>1</sup>
-`rotatable_bonds` | unitless | The number of rotatable bonds within a molecule.<sup>2</sup>
-
-## Complete source code
-
-To make this blog post easier to read, I have omitted the source code. However, [you can read the source code in it entirety on GitHub.](https://github.com/akey7/solubility-ml/blob/v0.0.2/solubility_regression.Rmd)
-
 ## Exploratory visualization
 
 ``` {r include = FALSE}
@@ -57,72 +26,6 @@ df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
     solubility = measured.log.solubility.in.mols.per.litre
 )
 ```
-
-Before I dive into the machine learning model, let's examine exploratory plots to get a feel for the data distribution. Figure 1 has histograms (for continuous variables) and bar plots (for discrete variables) to demonstrate the dataset's values' distributions. Figure 1a, 1b, 1d, 1e, and 1f show distributions of values favoring their respective range's low ends. Solubility, our response variable, has a broader spread above and below its mean of -3.05.
-
-``` {r, fig.height = 7, fig.width = 7, fig.align = "center", echo = FALSE, fig.cap = "Histograms and bar plots of variables"}
-p1 <- ggplot(df, aes(x = mw)) +
-  geom_histogram(bins = 10) +
-  labs(title = "(a)")
-
-p2 <- ggplot(df, aes(x = psa)) +
-  geom_histogram(bins = 10) +
-  labs(title = "(b)")
-
-p3 <- ggplot(df, aes(x = solubility)) +
-  geom_histogram(bins = 10) +
-  labs(title = "(c)")
-
-p4 <- ggplot(df, aes(x = h_bond_donors)) +
-  geom_bar() +
-  labs(title = "(d)")
-
-p5 <- ggplot(df, aes(x = rings)) +
-  geom_bar() +
-  labs(title = "(e)")
-
-p6 <- ggplot(df, aes(x = rotatable_bonds)) +
-  geom_bar() +
-  labs(title = "(f)")
-
-grid.arrange(p1, p2, p3, p4, p5, p6, nrow = 3)
-```
-
-Figure 1a, 1b, 1d, 1e, and 1f show distributions of values favoring their respective range's low ends. Solubility, in Figure 1c, has a broader spread above and below its mean of -3.05.
-
-A number of the features of the molecules require lots of atoms. For example, a five-ring molecule will likely have a higher molecular weight than a three-ring molecule. Molecular weight has a special relationship with all other variables that denote each molecule's increasing structural complexity. Figure 2 plots molecular weight against all other variables, with a trend line for each relationship, as shown below.
-
-``` {r, fig.height = 7, fig.width = 7, fig.align = "center", echo = FALSE, message = FALSE, warnings = FALSE, fig.cap = "Relationship of molecular weight to other variables"}
-alpha = 0.1
-p1 <- ggplot(df, aes(x = psa, y = mw)) +
-  geom_jitter(alpha = alpha) +
-  geom_smooth(method = "lm", se = FALSE) +
-  labs(title = "(a)")
-
-p2 <- ggplot(df, aes(x = solubility, y = mw)) +
-  geom_jitter(alpha = alpha) +
-  geom_smooth(method = "lm", se = FALSE) +
-  labs(title = "(b)")
-
-p3 <- ggplot(df, aes(x = h_bond_donors, y = mw)) +
-  geom_jitter(alpha = alpha, width = 0.1) +
-  geom_smooth(method = "lm", se = FALSE) +
-  labs(title = "(c)")
-
-p4 <- ggplot(df, aes(x = rings, y = mw)) +
-  geom_jitter(alpha = alpha, width = 0.1) +
-  geom_smooth(method = "lm", se = FALSE) +
-  labs(title = "(d)")
-
-p5 <- ggplot(df, aes(x = rotatable_bonds, y = mw)) +
-  geom_jitter(alpha = alpha, width = 0.1) +
-  geom_smooth(method = "lm", se = FALSE) +
-  labs(title = "(e)")
-
-grid.arrange(p1, p2, p3, p4, p5, nrow = 3)
-```
-
-Figures 2a, 2c, 2d, 2e all exhibit increasing molecular weight with increased structural complexity. Figure 2b stands out: in general, as molecular weight increases, solubility decreases.
 
 ## Split and bootstrap sample the data
 
