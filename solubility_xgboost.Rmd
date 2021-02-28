@@ -7,9 +7,11 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+I predicted the aqueous solubility of chemical compounds [listed in a public dataset](https://github.com/deepchem/deepchem/blob/master/datasets/delaney-processed.csv) using a basic linear model and an untuned random forest in my previous post. **The random forest showed the two models' best performance, achieving an RMSE of 0.866 and an R^2 of 0.828.** In this post, I train an XGBoost model on the same data. **The XGBoost model achieves an RMSE of 0.877 and an R^2 of 0.825** However, the added performance incurs additional computational costs.
+
 ## Load the libraries
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 library(tidyverse)
 library(tidymodels)
 library(ranger)
@@ -19,7 +21,9 @@ library(vip)
 theme_set(theme_classic())
 ```
 
-## Exploratory visualization
+## Load, split, and bootstrap sample the data.
+
+I select the columns I will use as predictors here. I also make the train test split here and initialize the bootstrap sampling. I only use five times in bootstrap sampling to save on computational time. I tried higher numbers but found no significant performance enhancement with the added computational time.
 
 ``` {r}
 df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
@@ -32,28 +36,28 @@ df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
     psa = Polar.Surface.Area, 
     solubility = measured.log.solubility.in.mols.per.litre
 )
-```
 
-## Split and bootstrap sample the data
-
-```{r}
 split <- initial_split(df)
 train_data <- training(split)
 test_data <- testing(split)
 train_boot <- bootstraps(train_data, times = 5)
 ```
 
-## Get a suggestion on how to use xgboost
+## Get boilerplate for an XGBoost regression.
+
+I leverage usemodels to get the boilerplate code for an XGBoost model.
 
 ```{r}
 usemodels::use_xgboost(solubility ~ mw + h_bond_donors + rings + rotatable_bonds + psa, data = train_data)
 ```
 
-## Implement most of suggestions
+## Assemble the model
 
-### First make the recipe
+Using the boilerplate suggestion above as a guide, I follow the steps below to prepare the XGBoost model for training.
 
-Unite the data, formula, and preprocessing steps.
+### First, I make the recipe.
+
+The recipe unites the data, formula, and preprocessing steps. Here, I use all the predictors. While all the predictors have non-zero variance, I still place the step_zv preprocessing step to remove zero-variance predictors as a best practice suggested by the boilerplate.
 
 ```{r}
 xgboost_recipe <- 
@@ -62,9 +66,9 @@ xgboost_recipe <-
   step_zv(all_predictors()) 
 ```
 
-### Then make the spec
+### Second, I make the spec.
 
-Specify the boost tree, what needs to be tuned, the mode, and the engine.
+The specification sets the engine as XGBoost, the mode as regression, and specifies the hyperparameters needing tuning.
 
 ```{r}
 xgboost_spec <- 
@@ -74,9 +78,9 @@ xgboost_spec <-
   set_engine("xgboost") 
 ```
 
-### Then make the workflow
+### Third, I make the workflow.
 
-Link the recipe and the spec together.
+The workflow ties the spec and recipe together.
 
 ```{r}
 xgboost_workflow <- 
@@ -85,9 +89,11 @@ xgboost_workflow <-
   add_model(xgboost_spec) 
 ```
 
-### Then tune the tree
+### Fourth, I tune XGBoost
 
-```{r}
+I set a random seed for reproducibility and enable parallel processing, keeping the default of using half the available cores. Then, I tune based on a grid search of 200 points.
+
+```{r warning=FALSE, message=FALSE}
 set.seed(14228)
 doParallel::registerDoParallel()
 
@@ -97,44 +103,85 @@ xgboost_tune <-
 
 ## Evaluate the model
 
-### Collect some metrics, evaluate the model
+### First, I plot performance metrics during the model tuning.
 
-```{r}
+Figure 1 reflects the RMSE and R^2 performance metrics during the tuning process.
+
+```{r fig.cap = "XGBoost Tuning Session"}
 autoplot(xgboost_tune) +
   theme_gray()
 ```
 
-### Finalize the workflow on the xgboost model
+### Second, I finalize the workflow.
+
+Workflow finalization selects the best performing hyperparameters based on the RMSE metric.
 
 ```{r}
 final_xgb <- xgboost_workflow %>%
   finalize_workflow(select_best(xgboost_tune, metric = "rmse"))
 ```
 
-## Predictions
+## Third, I fit and collect predictions from the best-performing model.
+
+In Figure 2, I plot the predictions with a trend line in the plot to see how well the model behaves on the test data.
 
 ```{r}
 solubilty_fit <- last_fit(final_xgb, split)
 collect_metrics(solubilty_fit)
 ```
 
-```{r}
+```{r fig.height = 3, fig.width = 3,fig.cap = "Actual vs predicted solubility"}
 collect_predictions(solubilty_fit) %>%
   ggplot(aes(.pred, solubility)) +
   geom_point(alpha = 0.4) +
   stat_smooth(method = "lm", se = FALSE)
 ```
 
-### Variable importance
+### Finally, I check the variable importance.
 
-```{r}
+In Figure 3 of variable importance, molecular weight is the most critical predictor of solubility for the XGBoost model.
+
+```{r fig.cap="Variable importance"}
 final_xgb %>%
   fit(data = train_data) %>%
   pull_workflow_fit() %>%
   vip(geom = "point")
 ```
 
-## Result
+Figure 4 shows how molecular weight tends to increase as the number of features on a molecule increase.
 
-The final XGBoost RMSE = 0.774, R^2 = 0.872. This beats the tuned random forest RMSE = 0.840, R^2 = 0.828. The XGBoost is the clear winner.
+``` {r, fig.height = 7, fig.width = 7, fig.cap = "Relationship of molecular weight to other variables"}
+alpha = 0.1
+p1 <- ggplot(df, aes(x = psa, y = mw)) +
+  geom_jitter(alpha = alpha) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(a)") +
+  theme_minimal()
+
+p2 <- ggplot(df, aes(x = solubility, y = mw)) +
+  geom_jitter(alpha = alpha) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(b)") +
+  theme_minimal()
+
+p3 <- ggplot(df, aes(x = h_bond_donors, y = mw)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(c)") +
+  theme_minimal()
+
+p4 <- ggplot(df, aes(x = rings, y = mw)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(d)") +
+  theme_minimal()
+
+p5 <- ggplot(df, aes(x = rotatable_bonds, y = mw)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(e)") +
+  theme_minimal()
+
+grid.arrange(p1, p2, p3, p4, p5, nrow = 3)
+```
 
