@@ -1,10 +1,15 @@
 ---
-title: "solubility_tuned_random_forest.Rmd"
+title: "solubility_xgboost.Rmd"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load the libraries
+
+```{r}
 library(tidyverse)
 library(tidymodels)
 library(ranger)
@@ -13,6 +18,7 @@ library(gridExtra)
 library(vip)
 theme_set(theme_classic())
 ```
+
 ## Exploratory visualization
 
 ``` {r}
@@ -105,7 +111,7 @@ final_xgb <- xgboost_workflow %>%
   finalize_workflow(select_best(xgboost_tune, metric = "rmse"))
 ```
 
-## Predictions and predictor importance
+## Predictions
 
 ```{r}
 solubilty_fit <- last_fit(final_xgb, split)
