@@ -7,7 +7,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-I predicted the aqueous solubility of chemical compounds [listed in a public dataset](https://github.com/deepchem/deepchem/blob/master/datasets/delaney-processed.csv) using a basic linear model and an untuned random forest in my previous post. **The random forest showed the two models' best performance, achieving an RMSE of 0.866 and an R^2 of 0.828.** In this post, I train an XGBoost model on the same data. **The XGBoost model achieves an RMSE of 0.877 and an R^2 of 0.825** However, the added performance incurs additional computational costs.
+I predicted the aqueous solubility of chemical compounds [listed in a public dataset](https://github.com/deepchem/deepchem/blob/master/datasets/delaney-processed.csv) using a basic linear model and an untuned random forest in my previous post. **The random forest showed the two models' best performance, achieving an RMSE of 0.866 and an R^2 of 0.828.** In this post, I train an XGBoost model on the same data. **The XGBoost model achieves an RMSE of 0.806 and an R^2 of 0.863** However, the added performance incurs additional computational costs.
 
 ## Load the libraries
 
@@ -23,7 +23,7 @@ theme_set(theme_classic())
 
 ## Load, split, and bootstrap sample the data.
 
-I select the columns I will use as predictors here. I also make the train test split here and initialize the bootstrap sampling. I only use five times in bootstrap sampling to save on computational time. I tried higher numbers but found no significant performance enhancement with the added computational time.
+I select the columns I will use as predictors here. I also make the train test split here and initialize the bootstrap sampling.
 
 ``` {r}
 df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
@@ -40,7 +40,7 @@ df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
 split <- initial_split(df)
 train_data <- training(split)
 test_data <- testing(split)
-train_boot <- bootstraps(train_data, times = 5)
+train_boot <- bootstraps(train_data, times = 10)
 ```
 
 ## Get boilerplate for an XGBoost regression.
@@ -98,7 +98,7 @@ set.seed(14228)
 doParallel::registerDoParallel()
 
 xgboost_tune <-
-  tune_grid(xgboost_workflow, resamples = train_boot, grid = 200)
+  tune_grid(xgboost_workflow, resamples = train_boot, grid = 300)
 ```
 
 ## Evaluate the model
@@ -185,3 +185,6 @@ p5 <- ggplot(df, aes(x = rotatable_bonds, y = mw)) +
 grid.arrange(p1, p2, p3, p4, p5, nrow = 3)
 ```
 
+## Conclusion
+
+The XGBoost model edges out the random forest model. Perhaps the XGBoost model's perfomance could be improved even further by either increasing the number of sample points on the hyperparameter grid or by using a more intelligent sampling method, such as latin hypercube.
