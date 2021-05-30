@@ -274,6 +274,44 @@ grid.arrange(cluster_2, cluster_3, cluster_4, nrow = 2)
 | rotatable bonds | 3 |
 | molecular weight | 4 |
 
+## Linear regressions on each cluster
+
+Using the optimal number of clusters per model, the plots show a linear regression on top of each cluster arrnagement:
+
+``` {r fig.height = 7, fig.width = 7, fig.cap = "Solubility versus property with clusters and linear models"}
+lm_1 <- ggplot(psa_cluster_df, aes(x = psa, y = solubility, col = cluster_3)) +
+  geom_point(alpha = alpha) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(a)") +
+  theme_minimal()
+
+lm_2 <- ggplot(h_bond_donor_cluster_df, aes(x = h_bond_donors, y = solubility, col = cluster_3)) +
+  geom_point(alpha = alpha) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(b)") +
+  theme_minimal()
+
+lm_3 <- ggplot(rings_cluster_df, aes(x = rings, y = solubility, col = cluster_4)) +
+  geom_point(alpha = alpha) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(c)") +
+  theme_minimal()
+
+lm_4 <- ggplot(rotatable_bonds_cluster_df, aes(x = rotatable_bonds, y = solubility, col = cluster_3)) +
+  geom_point(alpha = alpha) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(d)") +
+  theme_minimal()
+
+lm_5 <- ggplot(mw_cluster_df, aes(x = mw, y = solubility, col = cluster_4)) +
+  geom_point(alpha = alpha) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(e)") +
+  theme_minimal()
+
+grid.arrange(lm_1, lm_2, lm_3, lm_4, lm_5, nrow = 3)
+```
+
 ## Conclusion
 
 When I use hierarchiical clustering to group solubilities, each variable in the dataset needs a different number of clusters to adequately specify its relastionship to solubility.
