@@ -1,0 +1,107 @@
+---
+title: "solubility_clustering"
+author: "Alicia Key"
+date: "1/24/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.align = "center")
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(gridExtra)
+```
+
+In my prior aqueous solubility regression study, I did an exploratory data visualization and found intriguing plots of solubility versus other variables in the study. I didn't perform any experimental modeling of those relationships in that study. Here, I followup by performing a cluster analysis usimg hierarchcical clustering of solubility relationships to help future regression modeling efforts. My question is: do clusters within each of these relationships explain each feature's effect on solubility?
+
+Table 1 is a sample of some of the compounds in the dataset:
+
+``` {r}
+df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
+  select(
+    compound = Compound.ID, 
+    mw = Molecular.Weight, 
+    h_bond_donors = Number.of.H.Bond.Donors, 
+    rings = Number.of.Rings, 
+    rotatable_bonds = Number.of.Rotatable.Bonds, 
+    psa = Polar.Surface.Area, 
+    solubility = measured.log.solubility.in.mols.per.litre
+)
+knitr::kable(head(df))
+```
+
+### Summary of optimum number of clusters
+
+| Variable name | Optimal cluster count |
+|---|---|
+| polar surface area (PSA) | 3 |
+| h-bond donors | 3 |
+| rings | 4 |
+| rotatable bonds | 3 |
+| molecular weight | 4 |
+
+## Linear regressions on each cluster
+
+Using the optimal number of clusters per model, the plots show a linear regression on top of each cluster arrnagement:
+
+``` {r fig.height = 7, fig.width = 7, fig.cap = "Solubility versus property with clusters and linear models"}
+alpha <- 0.1
+width <- 0.01
+
+hierarchical_clusters <- function(features_df) {
+  cluster_labels = list()
+  
+  distances <- features_df %>%
+    as.matrix() %>%
+    scale() %>%
+    dist()
+  
+  hclust_out <- hclust(distances, method = "complete")
+  
+  features_df %>%
+    mutate(
+      cluster_2 = as.factor(cutree(hclust_out, k = 2)),
+      cluster_3 = as.factor(cutree(hclust_out, k = 3)),
+      cluster_4 = as.factor(cutree(hclust_out, k = 4))
+    )
+}
+
+psa_cluster_df <- hierarchical_clusters(select(df, solubility, psa))
+h_bond_donor_cluster_df <- hierarchical_clusters(select(df, solubility, h_bond_donors))
+rings_cluster_df <- hierarchical_clusters(select(df, solubility, rings))
+rotatable_bonds_cluster_df <- hierarchical_clusters(select(df, solubility, rotatable_bonds))
+mw_cluster_df <- hierarchical_clusters(select(df, solubility, mw))
+
+psa_cluster_3 <- ggplot(psa_cluster_df, aes(x = psa, y = solubility, col = cluster_3)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(a)")
+
+h_bond_donor_cluster_3 <- ggplot(h_bond_donor_cluster_df, aes(x = h_bond_donors, y = solubility, col = cluster_3)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(b)")
+
+rings_cluster_4 <- ggplot(rings_cluster_df, aes(x = rings, y = solubility, col = cluster_4)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(c)")
+  
+rotatble_bonds_3 <- ggplot(rotatable_bonds_cluster_df, aes(x = rotatable_bonds, y = solubility, col = cluster_3)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(d)")
+
+mw_cluster_4 <- ggplot(mw_cluster_df, aes(x = mw, y = solubility, col = cluster_4)) +
+  geom_jitter(alpha = alpha, width = 0.1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(e)")
+
+grid.arrange(psa_cluster_3, h_bond_donor_cluster_3, rings_cluster_4, rotatble_bonds_3, mw_cluster_4, nrow = 3)
+```
+
+## Conclusion
+
+When I use hierarchiical clustering to group solubilities, each variable in the dataset needs a different number of clusters to adequately specify its relastionship to solubility.
+
