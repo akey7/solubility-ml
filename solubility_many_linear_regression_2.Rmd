@@ -11,9 +11,10 @@ library(ggplot2)
 library(dplyr)
 library(readr)
 library(gridExtra)
+theme_set(theme_void())
 ```
 
-In my prior aqueous solubility regression study, I did an exploratory data visualization and found intriguing plots of solubility versus other variables in the study. I didn't perform any experimental modeling of those relationships in that study. Here, I followup by performing a cluster analysis usimg hierarchcical clustering of solubility relationships to help future regression modeling efforts. My question is: do clusters within each of these relationships explain each feature's effect on solubility?
+In my prior solubility clustering study, I used hierarchcial clustering to  
 
 Table 1 is a sample of some of the compounds in the dataset:
 
@@ -33,7 +34,7 @@ knitr::kable(head(df))
 
 ### Summary of optimum number of clusters
 
-| Variable name | Optimal cluster count |
+| Solubility vs... | Optimal cluster count |
 |---|---|
 | polar surface area (PSA) | 3 |
 | h-bond donors | 3 |
@@ -103,5 +104,5 @@ grid.arrange(psa_cluster_3, h_bond_donor_cluster_3, rings_cluster_4, rotatble_bo
 
 ## Conclusion
 
-When I use hierarchiical clustering to group solubilities, each variable in the dataset needs a different number of clusters to adequately specify its relastionship to solubility.
+When I use hierarchical clustering to group solubilities, each variable in the dataset needs a different number of clusters to adequately specify its relastionship to solubility.
 
