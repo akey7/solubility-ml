@@ -260,3 +260,30 @@ grid.arrange(cluster_2, cluster_3, cluster_4, nrow = 2)
 
 When I use hierarchiical clustering to group solubilities, each variable in the dataset needs a different number of clusters to adequately specify its relastionship to solubility.
 
+### Solubility versus molecular weight by cluster
+
+```{r fig.height = 6, fig.width = 7, fig.cap = "Solubility versus molecular weight by cluster with regression lines"}
+alpha <- 0.1
+size <- 2
+mw_cluster_df <- hierarchical_clusters(select(df, solubility, mw))
+
+cluster_2 <- ggplot(mw_cluster_df, aes(x = mw, y = solubility, col = cluster_2)) +
+  geom_point(alpha = alpha, size = size) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(a)") +
+  theme_minimal()
+
+cluster_3 <- ggplot(mw_cluster_df, aes(x = mw, y = solubility, col = cluster_3)) +
+  geom_point(alpha = alpha, size = size) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(b)") +
+  theme_minimal()
+
+cluster_4 <- ggplot(mw_cluster_df, aes(x = mw, y = solubility, col = cluster_4)) +
+  geom_point(alpha = alpha, size = size) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(c)") +
+  theme_minimal()
+
+grid.arrange(cluster_2, cluster_3, cluster_4, nrow = 2)
+```
