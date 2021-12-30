@@ -1,0 +1,99 @@
+---
+title: "solubility_tuned_random_forest.Rmd"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load the libraries
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(ranger)
+library(usemodels)
+library(gridExtra)
+theme_set(theme_classic())
+```
+
+``` {r include = FALSE}
+df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%
+  select(
+    compound = Compound.ID, 
+    mw = Molecular.Weight, 
+    h_bond_donors = Number.of.H.Bond.Donors, 
+    rings = Number.of.Rings, 
+    rotatable_bonds = Number.of.Rotatable.Bonds, 
+    psa = Polar.Surface.Area, 
+    solubility = measured.log.solubility.in.mols.per.litre
+)
+```
+
+## Split and bootstrap sample the data
+
+```{r}
+split <- initial_split(df)
+train_data <- training(split)
+test_data <- testing(split)
+train_boot <- bootstraps(train_data)
+```
+
+## Implement the suggestion
+
+```{r}
+ranger_recipe <- 
+  recipe(formula = solubility ~ mw + h_bond_donors + rings + rotatable_bonds + 
+    psa, data = train_data) 
+
+ranger_spec <- 
+  rand_forest(mtry = tune(), min_n = tune(), trees = 2000) %>% 
+  set_mode("regression") %>% 
+  set_engine("ranger") 
+
+ranger_workflow <- 
+  workflow() %>% 
+  add_recipe(ranger_recipe) %>% 
+  add_model(ranger_spec) 
+
+set.seed(86881)
+doParallel::registerDoParallel()
+ranger_tune <-
+  tune_grid(ranger_workflow, resamples = train_boot, grid = 30)
+```
+
+## Explore the tuning results
+
+### Show the values of the best random forests
+
+```{r}
+autoplot(ranger_tune) +
+  theme_grey()
+```
+
+### Finalize the workflow on the best forest
+
+```{r}
+final_rf <- ranger_workflow %>%
+  finalize_workflow(select_best(ranger_tune, metric = "rmse"))
+```
+
+## Predictions and predictor importance
+
+```{r}
+solubilty_fit <- last_fit(final_rf, split)
+collect_metrics(solubilty_fit)
+```
+
+```{r}
+collect_predictions(solubilty_fit) %>%
+  ggplot(aes(.pred, solubility)) +
+  geom_point(alpha = 0.4) +
+  stat_smooth(method = "lm", se = FALSE)
+```
+
+## Results
+
+The untuned random forest using ranger has an RMSE = 0.866 and R^2 = 0.828. This tuned random forest edges out these scores with RMSE = 0.840 and R^2 = 0.830. Most of the benefit from 2000 tuned trees (as opposed 500 untuned trees) came in the decrease of RMSE. However, this random forest was computationally expensive, whereas the untuned model was not. The untuned model may have the best computational complexity and performance tradeoff. 
+
