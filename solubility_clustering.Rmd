@@ -11,6 +11,7 @@ library(ggplot2)
 library(dplyr)
 library(readr)
 library(gridExtra)
+theme_set(theme_classic())
 ```
 
 In my prior aqueous solubility regression study, I did an exploratory data visualization and found intriguing plots of solubility versus other variables in the study. I didn't perform any experimental modeling of those relationships in that study. Here, I followup by performing a cluster analysis of solubility relationships to help future regression modeling efforts. My question is: do clusters within each of these relationships explain each feature's effect on solubility?
@@ -42,33 +43,27 @@ Figure 1 contains histograms and bar plots showing the distributions of variable
 ``` {r, fig.height = 7, fig.width = 7, fig.cap = "Histograms and bar plots of variables"}
 p1 <- ggplot(df, aes(x = mw)) +
   geom_histogram(bins = 10) +
-  labs(title = "(a)") +
-  theme_minimal()
+  labs(title = "(a)")
 
 p2 <- ggplot(df, aes(x = psa)) +
   geom_histogram(bins = 10) +
-  labs(title = "(b)") +
-  theme_minimal()
+  labs(title = "(b)")
 
 p3 <- ggplot(df, aes(x = solubility)) +
   geom_histogram(bins = 10) +
-  labs(title = "(c)") +
-  theme_minimal()
+  labs(title = "(c)")
 
 p4 <- ggplot(df, aes(x = h_bond_donors)) +
   geom_bar() +
-  labs(title = "(d)") +
-  theme_minimal()
+  labs(title = "(d)")
 
 p5 <- ggplot(df, aes(x = rings)) +
   geom_bar() +
-  labs(title = "(e)") +
-  theme_minimal()
+  labs(title = "(e)")
 
 p6 <- ggplot(df, aes(x = rotatable_bonds)) +
   geom_bar() +
-  labs(title = "(f)") +
-  theme_minimal()
+  labs(title = "(f)")
 
 grid.arrange(p1, p2, p3, p4, p5, p6, nrow = 3)
 ```
@@ -83,32 +78,27 @@ alpha <- 0.1
 p1 <- ggplot(df, aes(x = mw, y = solubility)) +
   geom_jitter(alpha = alpha, width = 0.1) +
   geom_smooth(method = "lm", se = FALSE) +
-  labs(title = "(a)") +
-  theme_minimal()
+  labs(title = "(a)")
 
 p2 <- ggplot(df, aes(x = psa, y = solubility)) +
   geom_jitter(alpha = alpha) +
   geom_smooth(method = "lm", se = FALSE) +
-  labs(title = "(b)") +
-  theme_minimal()
+  labs(title = "(b)")
 
 p3 <- ggplot(df, aes(x = h_bond_donors, y = solubility)) +
   geom_jitter(alpha = alpha, width = 0.1) +
   geom_smooth(method = "lm", se = FALSE) +
-  labs(title = "(c)") +
-  theme_minimal()
+  labs(title = "(c)")
 
 p4 <- ggplot(df, aes(x = rings, y = solubility)) +
   geom_jitter(alpha = alpha, width = 0.1) +
   geom_smooth(method = "lm", se = FALSE) +
-  labs(title = "(d)") +
-  theme_minimal()
+  labs(title = "(d)")
 
 p5 <- ggplot(df, aes(x = rotatable_bonds, y = solubility)) +
   geom_jitter(alpha = alpha, width = 0.1) +
   geom_smooth(method = "lm", se = FALSE) +
-  labs(title = "(e)") +
-  theme_minimal()
+  labs(title = "(e)")
 
 grid.arrange(p1, p2, p3, p4, p5, nrow = 3)
 ```
@@ -143,23 +133,21 @@ hierarchical_clusters <- function(features_df) {
 
 ```{r fig.height = 6, fig.width = 7, fig.cap = "Solubility versus polar surface area (PSA)"}
 alpha <- 0.3
+size <- 5
 
 psa_cluster_df <- hierarchical_clusters(select(df, solubility, psa))
 
 cluster_2 <- ggplot(psa_cluster_df, aes(x = psa, y = solubility, col = cluster_2)) +
-  geom_point(alpha = alpha) +
-  labs(title = "(a)") +
-  theme_minimal()
+  geom_point(alpha = alpha, size = size) +
+  labs(title = "(a)")
 
 cluster_3 <- ggplot(psa_cluster_df, aes(x = psa, y = solubility, col = cluster_3)) +
-  geom_point(alpha = alpha) +
-  labs(title = "(b)") +
-  theme_minimal()
+  geom_point(alpha = alpha, size = size) +
+  labs(title = "(b)")
 
 cluster_4 <- ggplot(psa_cluster_df, aes(x = psa, y = solubility, col = cluster_4)) +
-  geom_point(alpha = alpha) +
-  labs(title = "(c)") +
-  theme_minimal()
+  geom_point(alpha = alpha, size = size) +
+  labs(title = "(c)")
 
 grid.arrange(cluster_2, cluster_3, cluster_4, nrow = 2)
 ```
@@ -197,19 +185,16 @@ Similar to Figure 3, Figure 4a with two clusters provides no clear break between
 rings_cluster_df <- hierarchical_clusters(select(df, solubility, rings))
 
 cluster_2 <- ggplot(rings_cluster_df, aes(x = rings, y = solubility, col = cluster_2)) +
-  geom_point(alpha = alpha) +
-  labs(title = "(a)") +
-  theme_minimal()
+  geom_point(alpha = alpha, size = size) +
+  labs(title = "(a)")
 
 cluster_3 <- ggplot(rings_cluster_df, aes(x = rings, y = solubility, col = cluster_3)) +
-  geom_point(alpha = alpha) +
-  labs(title = "(b)") +
-  theme_minimal()
+  geom_point(alpha = alpha, size = size) +
+  labs(title = "(b)")
 
 cluster_4 <- ggplot(rings_cluster_df, aes(x = rings, y = solubility, col = cluster_4)) +
-  geom_point(alpha = alpha) +
-  labs(title = "(c)") +
-  theme_minimal()
+  geom_point(alpha = alpha, size = size) +
+  labs(title = "(c)")
 
 grid.arrange(cluster_2, cluster_3, cluster_4, nrow = 2)
 ```
@@ -222,19 +207,16 @@ Figure 5a shows two clusters, each of which straddles high and low solubility. F
 rotatable_bonds_cluster_df <- hierarchical_clusters(select(df, solubility, rotatable_bonds))
 
 cluster_2 <- ggplot(rotatable_bonds_cluster_df, aes(x = rotatable_bonds, y = solubility, col = cluster_2)) +
-  geom_point(alpha = alpha) +
-  labs(title = "(a)") +
-  theme_minimal()
+  geom_point(alpha = alpha, size = size) +
+  labs(title = "(a)")
 
 cluster_3 <- ggplot(rotatable_bonds_cluster_df, aes(x = rotatable_bonds, y = solubility, col = cluster_3)) +
-  geom_point(alpha = alpha) +
-  labs(title = "(b)") +
-  theme_minimal()
+  geom_point(alpha = alpha, size = size) +
+  labs(title = "(b)")
 
 cluster_4 <- ggplot(rotatable_bonds_cluster_df, aes(x = rotatable_bonds, y = solubility, col = cluster_4)) +
-  geom_point(alpha = alpha) +
-  labs(title = "(c)") +
-  theme_minimal()
+  geom_point(alpha = alpha, size = size) +
+  labs(title = "(c)")
 
 grid.arrange(cluster_2, cluster_3, cluster_4, nrow = 2)
 ```
@@ -247,17 +229,17 @@ Figure 6a shows two clusters of rotatable bond counts that don't provide a break
 mw_cluster_df <- hierarchical_clusters(select(df, solubility, mw))
 
 cluster_2 <- ggplot(mw_cluster_df, aes(x = mw, y = solubility, col = cluster_2)) +
-  geom_point(alpha = alpha) +
+  geom_point(alpha = alpha, size = size) +
   labs(title = "(a)") +
   theme_minimal()
 
 cluster_3 <- ggplot(mw_cluster_df, aes(x = mw, y = solubility, col = cluster_3)) +
-  geom_point(alpha = alpha) +
+  geom_point(alpha = alpha, size = size) +
   labs(title = "(b)") +
   theme_minimal()
 
 cluster_4 <- ggplot(mw_cluster_df, aes(x = mw, y = solubility, col = cluster_4)) +
-  geom_point(alpha = alpha) +
+  geom_point(alpha = alpha, size = size) +
   labs(title = "(c)") +
   theme_minimal()
 
@@ -278,3 +260,30 @@ grid.arrange(cluster_2, cluster_3, cluster_4, nrow = 2)
 
 When I use hierarchiical clustering to group solubilities, each variable in the dataset needs a different number of clusters to adequately specify its relastionship to solubility.
 
+### Solubility versus molecular weight by cluster
+
+```{r fig.height = 6, fig.width = 7, fig.cap = "Solubility versus molecular weight by cluster with regression lines"}
+alpha <- 0.1
+size <- 2
+mw_cluster_df <- hierarchical_clusters(select(df, solubility, mw))
+
+cluster_2 <- ggplot(mw_cluster_df, aes(x = mw, y = solubility, col = cluster_2)) +
+  geom_point(alpha = alpha, size = size) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(a)") +
+  theme_minimal()
+
+cluster_3 <- ggplot(mw_cluster_df, aes(x = mw, y = solubility, col = cluster_3)) +
+  geom_point(alpha = alpha, size = size) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(b)") +
+  theme_minimal()
+
+cluster_4 <- ggplot(mw_cluster_df, aes(x = mw, y = solubility, col = cluster_4)) +
+  geom_point(alpha = alpha, size = size) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "(c)") +
+  theme_minimal()
+
+grid.arrange(cluster_2, cluster_3, cluster_4, nrow = 2)
+```

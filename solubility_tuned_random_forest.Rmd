@@ -5,6 +5,11 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load the libraries
+
+```{r}
 library(tidyverse)
 library(tidymodels)
 library(ranger)
@@ -12,7 +17,6 @@ library(usemodels)
 library(gridExtra)
 theme_set(theme_classic())
 ```
-## Exploratory visualization
 
 ``` {r include = FALSE}
 df <- as_tibble(read.csv("data/delaney-processed.csv")) %>%

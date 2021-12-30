@@ -98,7 +98,7 @@ set.seed(0)
 doParallel::registerDoParallel()
 
 xgboost_tune <-
-  tune_grid(xgboost_workflow, resamples = train_boot, grid = 600)
+  tune_grid(xgboost_workflow, resamples = train_boot, grid = 10)
 ```
 
 ## Evaluate the model
