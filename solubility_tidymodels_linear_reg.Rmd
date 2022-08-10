@@ -1,0 +1,112 @@
+---
+title: "Solubility Tidymodels Linear Regression"
+author: "Alicia Key"
+date: "2022-08-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE}
+# ibrary(readr)
+# library(dplyr)
+# library(rsample)
+# library(parsnip)
+# library(yardstick)
+library(tidyverse)
+library(tidymodels)
+```
+
+## Load data
+
+```{r}
+compounds <- read_csv("data/delaney-processed-2.csv") %>%
+  select(-smiles, -compound)
+knitr::kable(head(compounds))
+```
+
+## Train the model
+
+### Train/test split
+
+```{r}
+compounds_split <- compounds %>%
+  initial_split(prop = 0.75, strata = log_solubility)
+
+compounds_train <- compounds_split %>%
+  training()
+
+compounds_test <- compounds_split %>%
+  testing()
+```
+
+### Create the model
+
+```{r}
+lm_model <- linear_reg() %>%
+  set_engine("lm") %>%
+  set_mode("regression")
+```
+
+### Fit the model
+
+```{r}
+lm_fit <- lm_model %>%
+  fit(log_solubility ~ ., data = compounds_train)
+```
+
+### Obtain model summary
+
+```{r}
+summary <- tidy(lm_fit)
+knitr::kable(summary)
+```
+
+### Make predictions on the test set
+
+```{r}
+solubility_predictions <- lm_fit %>%
+  predict(new_data = compounds_test)
+
+solubility_test_results <- compounds_test %>%
+  bind_cols(solubility_predictions)
+
+knitr::kable(head(solubility_test_results))
+```
+
+### Gather metrics
+
+#### RMSE
+
+```{r}
+solubility_test_rmse <- solubility_test_results %>%
+  rmse(truth = log_solubility, estimate = .pred)
+
+knitr::kable(solubility_test_rmse)
+```
+
+#### R squared
+
+```{r}
+solubility_test_rsq <- solubility_test_results %>%
+  rsq(truth = log_solubility, estimate = .pred)
+
+knitr::kable(solubility_test_rsq)
+```
+
+#### R squared plot
+
+```{r}
+ggplot(solubility_test_results, aes(x = log_solubility, y = .pred)) +
+	geom_point() +
+	geom_abline(color = "blue", linetype = 2) +
+	coord_obs_pred() +
+	labs(
+		title = "R-Squared Plot",
+		y = "Predicted",
+		x = "Actual"
+	)
+```
+
